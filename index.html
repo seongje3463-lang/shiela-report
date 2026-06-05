@@ -599,7 +599,7 @@ function loadData() {
 
 function saveAll() {
   if (!isToday) return;
-  data.note = document.getElementById('note-area').value;
+  var noteEl = document.getElementById('note-input'); data.note = noteEl ? noteEl.value : '';
   setSyncStatus('saving');
 
   var params = '?action=write' +
