@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shiela — Daily Report | 초코렌트카</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f5f4f0;
+    --surface: #ffffff;
+    --border: #e4e2db;
+    --text: #1a1a18;
+    --text-sub: #6b6b65;
+    --text-dim: #a8a8a0;
+    --accent: #2d6a4f;
+    --accent-light: #e8f4ee;
+    --accent-btn: #2d6a4f;
+    --danger: #c0392b;
+    --danger-light: #fdf0ee;
+    --warn: #d4821a;
+    --warn-light: #fef6e8;
+    --radius: 12px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04);
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 0;
+  }
+
+  /* HEADER */
+  .header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .header-title { font-size: 15px; font-weight: 600; }
+  .header-sub { font-size: 12px; color: var(--text-sub); margin-top: 1px; }
+  .lang-toggle { display: flex; gap: 4px; }
+  .lang-btn {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px; font-weight: 500;
+    padding: 5px 10px; border-radius: 6px;
+    border: 1px solid var(--border);
+    background: transparent; cursor: pointer;
+    color: var(--text-sub); transition: all 0.15s;
+  }
+  .lang-btn.active {
+    background: var(--text); color: #fff; border-color: var(--text);
+  }
+
+  /* LAYOUT */
+  .container { max-width: 680px; margin: 0 auto; padding: 24px 16px 60px; }
+
+  /* DATE NAV */
+  .date-nav {
+    display: flex; align-items: center; justify-content: center;
+    gap: 16px; margin-bottom: 24px;
+  }
+  .date-nav-btn {
+    width: 32px; height: 32px; border-radius: 8px;
+    border: 1px solid var(--border); background: var(--surface);
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    font-size: 16px; color: var(--text-sub); transition: all 0.15s;
+  }
+  .date-nav-btn:hover { background: var(--text); color: #fff; border-color: var(--text); }
+  .date-display { font-size: 16px; font-weight: 600; font-family: 'DM Mono', monospace; }
+
+  /* SYNC STATUS */
+  .sync-bar {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 14px; border-radius: 8px; margin-bottom: 20px;
+    font-size: 12px; font-weight: 500;
+    background: var(--accent-light); color: var(--accent);
+    border: 1px solid #c3e6d0;
+  }
+  .sync-bar.error { background: var(--danger-light); color: var(--danger); border-color: #f0c8c4; }
+  .sync-bar.saving { background: var(--warn-light); color: var(--warn); border-color: #f5ddb0; }
+  .sync-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+  .sync-dot.pulse { animation: pulse 1.2s ease-in-out infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+  /* CARD */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 16px;
+    box-shadow: var(--shadow);
+  }
+  .card-label {
+    font-size: 10px; font-weight: 600; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--text-dim);
+    margin-bottom: 16px;
+  }
+
+  /* ATTENDANCE */
+  .att-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .att-box {
+    border: 1px solid var(--border); border-radius: 8px; padding: 14px;
+  }
+  .att-box-label { font-size: 11px; color: var(--text-sub); margin-bottom: 6px; }
+  .att-time {
+    font-family: 'DM Mono', monospace; font-size: 22px; font-weight: 500;
+    margin-bottom: 12px; color: var(--text);
+    min-height: 32px;
+  }
+  .att-time.empty { color: var(--text-dim); }
+  .att-btn {
+    width: 100%; padding: 9px 0; border-radius: 7px;
+    border: none; cursor: pointer; font-family: 'DM Sans', sans-serif;
+    font-size: 13px; font-weight: 500; transition: all 0.15s;
+  }
+  .att-btn.checkin { background: var(--accent); color: #fff; }
+  .att-btn.checkin:hover { background: #255c43; }
+  .att-btn.checkout { background: var(--danger); color: #fff; }
+  .att-btn.checkout:hover { background: #a93226; }
+  .att-btn.done { background: var(--border); color: var(--text-dim); cursor: not-allowed; }
+
+  /* TASKS */
+  .task-input-row { display: flex; gap: 8px; margin-bottom: 14px; }
+  .task-input {
+    flex: 1; padding: 10px 12px; border-radius: 8px;
+    border: 1px solid var(--border); font-family: 'DM Sans', sans-serif;
+    font-size: 14px; outline: none; background: var(--bg);
+    transition: border 0.15s;
+  }
+  .task-input:focus { border-color: var(--accent); background: #fff; }
+  .add-btn {
+    padding: 10px 16px; border-radius: 8px; border: none;
+    background: var(--accent); color: #fff; font-family: 'DM Sans', sans-serif;
+    font-size: 13px; font-weight: 500; cursor: pointer; white-space: nowrap;
+    transition: background 0.15s;
+  }
+  .add-btn:hover { background: #255c43; }
+
+  .task-list { display: flex; flex-direction: column; gap: 8px; }
+  .task-item {
+    border: 1px solid var(--border); border-radius: 8px; overflow: hidden;
+    transition: border-color 0.15s;
+  }
+  .task-item.done-item { border-color: var(--accent-light); }
+  .task-main {
+    display: flex; align-items: center; gap: 10px; padding: 12px 14px;
+  }
+  .task-num {
+    font-family: 'DM Mono', monospace; font-size: 11px;
+    color: var(--text-dim); min-width: 18px;
+  }
+  .task-text { flex: 1; font-size: 14px; line-height: 1.4; }
+  .task-text.done-text {
+    text-decoration: line-through; color: var(--text-dim);
+  }
+  .complete-btn {
+    padding: 5px 12px; border-radius: 6px; border: 1px solid var(--border);
+    background: #fff; font-family: 'DM Sans', sans-serif;
+    font-size: 11px; font-weight: 500; cursor: pointer; color: var(--text-sub);
+    transition: all 0.15s; white-space: nowrap;
+  }
+  .complete-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .complete-btn.done-btn {
+    background: var(--accent-light); color: var(--accent);
+    border-color: var(--accent-light); cursor: default;
+  }
+  .task-memo {
+    padding: 0 14px 12px 42px;
+  }
+  .task-memo-input {
+    width: 100%; padding: 8px 10px; border-radius: 6px;
+    border: 1px solid var(--border); font-family: 'DM Sans', sans-serif;
+    font-size: 13px; color: var(--text-sub); background: var(--bg);
+    outline: none; resize: none;
+  }
+  .task-memo-input:focus { border-color: var(--accent); background: #fff; }
+  .no-tasks { font-size: 14px; color: var(--text-dim); text-align: center; padding: 20px 0; }
+
+  /* EXPENSE */
+  .exp-input-row {
+    display: grid; grid-template-columns: 130px 1fr 100px auto; gap: 8px;
+    margin-bottom: 14px; align-items: center;
+  }
+  .exp-select, .exp-input {
+    padding: 9px 10px; border-radius: 8px; border: 1px solid var(--border);
+    font-family: 'DM Sans', sans-serif; font-size: 13px;
+    background: var(--bg); outline: none; transition: border 0.15s;
+  }
+  .exp-select:focus, .exp-input:focus { border-color: var(--accent); background: #fff; }
+  .exp-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+  .exp-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px; border-radius: 8px; background: var(--bg);
+    font-size: 13px;
+  }
+  .exp-cat {
+    font-size: 11px; font-weight: 500; padding: 2px 8px;
+    border-radius: 20px; background: var(--accent-light); color: var(--accent);
+    white-space: nowrap;
+  }
+  .exp-name { flex: 1; }
+  .exp-amount { font-family: 'DM Mono', monospace; font-weight: 500; }
+  .exp-del {
+    background: none; border: none; cursor: pointer;
+    color: var(--text-dim); font-size: 16px; line-height: 1;
+    padding: 2px 4px; border-radius: 4px; transition: color 0.15s;
+  }
+  .exp-del:hover { color: var(--danger); }
+  .exp-total {
+    display: flex; justify-content: flex-end;
+    font-size: 13px; font-weight: 600; padding-top: 8px;
+    border-top: 1px solid var(--border); color: var(--accent);
+  }
+  .no-exp { font-size: 14px; color: var(--text-dim); text-align: center; padding: 16px 0; }
+
+  /* NOTE */
+  .note-area {
+    width: 100%; padding: 12px; border-radius: 8px;
+    border: 1px solid var(--border); font-family: 'DM Sans', sans-serif;
+    font-size: 14px; line-height: 1.6; background: var(--bg);
+    min-height: 90px; resize: vertical; outline: none;
+    transition: border 0.15s;
+  }
+  .note-area:focus { border-color: var(--accent); background: #fff; }
+  .save-btn {
+    width: 100%; margin-top: 12px; padding: 12px;
+    border-radius: 8px; border: none;
+    background: var(--accent); color: #fff;
+    font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .save-btn:hover { background: #255c43; }
+  .save-btn:disabled { background: var(--text-dim); cursor: not-allowed; }
+
+  /* READONLY overlay for past dates */
+  .readonly-notice {
+    background: var(--warn-light); color: var(--warn);
+    border: 1px solid #f5ddb0; border-radius: 8px;
+    padding: 10px 14px; font-size: 13px; margin-bottom: 16px; display: none;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <div class="header-title" id="h-title">Shiela — Daily Report</div>
+    <div class="header-sub">초코렌트카 Daily Work Log</div>
+  </div>
+  <div class="lang-toggle">
+    <button class="lang-btn active" onclick="setLang('en')">EN</button>
+    <button class="lang-btn" onclick="setLang('ko')">한국어</button>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- DATE NAV -->
+  <div class="date-nav">
+    <button class="date-nav-btn" onclick="changeDate(-1)">&#8592;</button>
+    <div class="date-display" id="date-display"></div>
+    <button class="date-nav-btn" onclick="changeDate(1)">&#8594;</button>
+  </div>
+
+  <!-- SYNC STATUS -->
+  <div class="sync-bar" id="sync-bar">
+    <div class="sync-dot" id="sync-dot"></div>
+    <span id="sync-msg">Connected</span>
+  </div>
+
+  <!-- READONLY NOTICE -->
+  <div class="readonly-notice" id="readonly-notice">
+    📅 <span id="readonly-text">This is a past record. Changes cannot be saved.</span>
+  </div>
+
+  <!-- ATTENDANCE -->
+  <div class="card">
+    <div class="card-label" id="l-att">Attendance</div>
+    <div class="att-grid">
+      <div class="att-box">
+        <div class="att-box-label" id="l-checkin">Check-in time</div>
+        <div class="att-time" id="checkin-display">—</div>
+        <button class="att-btn checkin" id="btn-checkin" onclick="recordCheckin()">
+          <span id="l-btn-checkin">Clock In</span>
+        </button>
+      </div>
+      <div class="att-box">
+        <div class="att-box-label" id="l-checkout">Check-out time</div>
+        <div class="att-time" id="checkout-display">—</div>
+        <button class="att-btn checkout" id="btn-checkout" onclick="recordCheckout()">
+          <span id="l-btn-checkout">Clock Out</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TASKS -->
+  <div class="card">
+    <div class="card-label" id="l-tasks">Today's Work</div>
+    <div class="task-input-row" id="task-input-area">
+      <input class="task-input" id="task-input" type="text" placeholder="Add a task..." onkeydown="if(event.key==='Enter')addTask()">
+      <button class="add-btn" onclick="addTask()" id="l-add">+ Add</button>
+    </div>
+    <div class="task-list" id="task-list"></div>
+  </div>
+
+  <!-- EXPENSE -->
+  <div class="card">
+    <div class="card-label" id="l-expense">Expense Details</div>
+    <div class="exp-input-row" id="exp-input-area">
+      <select class="exp-select" id="exp-cat">
+        <option value="traffic" id="o-traffic">Traffic</option>
+        <option value="office" id="o-office">Office</option>
+        <option value="food" id="o-food">Food</option>
+        <option value="other" id="o-other">Other</option>
+      </select>
+      <input class="exp-input" id="exp-name" type="text" placeholder="Item name">
+      <input class="exp-input" id="exp-amount" type="number" placeholder="AED" min="0">
+      <button class="add-btn" onclick="addExpense()">+ Add</button>
+    </div>
+    <div class="exp-list" id="exp-list"></div>
+    <div class="exp-total" id="exp-total" style="display:none"></div>
+  </div>
+
+  <!-- NOTE -->
+  <div class="card">
+    <div class="card-label" id="l-note">Special Notes</div>
+    <textarea class="note-area" id="note-area" placeholder="Any special notes for today..."></textarea>
+    <button class="save-btn" id="save-btn" onclick="saveAll()">
+      <span id="l-save">Save</span>
+    </button>
+  </div>
+
+</div>
+
+<script>
+// =============================================
+// CONFIGURATION — Apps Script URL 입력
+// =============================================
+var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzZ34WE_LQZj3nuhdMUzoctkSOhBvWVLx8TqhFZ-y9WXTkvOoAeCjmn7iJLXllsx_k6/exec';
+
+// =============================================
+// STATE
+// =============================================
+var currentDate = getTodayStr();
+var isToday = true;
+var lang = 'en';
+var data = {
+  checkin: '', checkout: '',
+  tasks: [], expenses: [], note: ''
+};
+
+var TX = {
+  en: {
+    title: 'Shiela — Daily Report',
+    att: 'ATTENDANCE', checkin: 'Check-in time', checkout: 'Check-out time',
+    btn_in: 'Clock In', btn_out: 'Clock Out',
+    already_in: 'Already recorded', already_out: 'Already recorded',
+    tasks: "TODAY'S WORK", task_ph: 'Add a task...', add: '+ Add',
+    done: 'Complete', pending: 'Pending',
+    memo_ph: 'Reason / note...',
+    expense: 'EXPENSE DETAILS', item: 'Item name', aed: 'AED',
+    cat: { traffic: 'Traffic', office: 'Office', food: 'Food', other: 'Other' },
+    total: 'Total',
+    note: 'SPECIAL NOTES', note_ph: 'Any special notes for today...',
+    save: 'Save',
+    no_tasks: 'No tasks registered.',
+    no_exp: 'No expense records.',
+    sync_ok: 'Synced with Google Sheets',
+    sync_saving: 'Saving...',
+    sync_err: 'Connection error. Check Apps Script URL.',
+    sync_loading: 'Loading data...',
+    readonly: 'This is a past record. Changes cannot be saved.',
+  },
+  ko: {
+    title: '실라 — 업무 보고',
+    att: '출퇴근 기록', checkin: '출근 시간', checkout: '퇴근 시간',
+    btn_in: '출근 기록', btn_out: '퇴근 기록',
+    already_in: '이미 기록됨', already_out: '이미 기록됨',
+    tasks: '오늘의 업무', task_ph: '업무 내용 입력...', add: '+ 추가',
+    done: '완료', pending: '진행중',
+    memo_ph: '사유 / 메모...',
+    expense: '지출 내역', item: '항목명', aed: 'AED',
+    cat: { traffic: '교통', office: '사무', food: '식비', other: '기타' },
+    total: '합계',
+    note: '특이사항', note_ph: '오늘의 특이사항을 입력하세요...',
+    save: '저장',
+    no_tasks: '등록된 업무가 없습니다.',
+    no_exp: '지출 내역이 없습니다.',
+    sync_ok: '구글 시트와 동기화됨',
+    sync_saving: '저장 중...',
+    sync_err: '연결 오류. Apps Script URL을 확인하세요.',
+    sync_loading: '데이터 불러오는 중...',
+    readonly: '과거 날짜입니다. 수정 후 저장이 불가합니다.',
+  }
+};
+
+function T(k) { return TX[lang][k] || k; }
+
+// =============================================
+// DATE HELPERS
+// =============================================
+function getTodayStr() {
+  var d = new Date();
+  return d.getFullYear() + '-' +
+    String(d.getMonth()+1).padStart(2,'0') + '-' +
+    String(d.getDate()).padStart(2,'0');
+}
+
+function formatDisplayDate(str) {
+  var d = new Date(str + 'T00:00:00');
+  if (lang === 'ko') {
+    var days_ko = ['일','월','화','수','목','금','토'];
+    return d.getFullYear() + '년 ' + (d.getMonth()+1) + '월 ' + d.getDate() + '일 (' + days_ko[d.getDay()] + ')';
+  } else {
+    var days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return months[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear() + ' (' + days[d.getDay()] + ')';
+  }
+}
+
+function changeDate(delta) {
+  var d = new Date(currentDate + 'T00:00:00');
+  d.setDate(d.getDate() + delta);
+  var newStr = d.getFullYear() + '-' +
+    String(d.getMonth()+1).padStart(2,'0') + '-' +
+    String(d.getDate()).padStart(2,'0');
+  var today = getTodayStr();
+  if (newStr > today) return; // 미래 이동 불가
+  currentDate = newStr;
+  isToday = (currentDate === today);
+  loadData();
+}
+
+// =============================================
+// SYNC / API
+// =============================================
+function setSyncStatus(state, msg) {
+  var bar = document.getElementById('sync-bar');
+  var dot = document.getElementById('sync-dot');
+  var msgEl = document.getElementById('sync-msg');
+  bar.className = 'sync-bar' + (state === 'error' ? ' error' : state === 'saving' ? ' saving' : '');
+  dot.className = 'sync-dot' + (state === 'saving' ? ' pulse' : '');
+  msgEl.textContent = msg || T('sync_' + state);
+}
+
+function loadData() {
+  document.getElementById('date-display').textContent = formatDisplayDate(currentDate);
+  setSyncStatus('saving', T('sync_loading'));
+
+  // 읽기 전용 처리
+  var rn = document.getElementById('readonly-notice');
+  if (!isToday) {
+    rn.style.display = 'block';
+    document.getElementById('readonly-text').textContent = T('readonly');
+    document.getElementById('save-btn').disabled = true;
+  } else {
+    rn.style.display = 'none';
+    document.getElementById('save-btn').disabled = false;
+  }
+
+  var url = APPS_SCRIPT_URL + '?action=read&date=' + currentDate + '&_=' + Date.now();
+  fetch(url)
+    .then(function(r){ return r.json(); })
+    .then(function(res) {
+      if (res.status === 'ok') {
+        if (res.record) {
+          data.checkin = res.record.checkin || '';
+          data.checkout = res.record.checkout || '';
+          data.tasks = res.record.tasks || [];
+          data.expenses = res.record.expenses || [];
+          data.note = res.record.note || '';
+        } else {
+          data = { checkin:'', checkout:'', tasks:[], expenses:[], note:'' };
+        }
+        setSyncStatus('ok');
+        render();
+      } else {
+        setSyncStatus('error');
+      }
+    })
+    .catch(function() {
+      setSyncStatus('error');
+      // 오류여도 빈 상태로 렌더
+      data = { checkin:'', checkout:'', tasks:[], expenses:[], note:'' };
+      render();
+    });
+}
+
+function saveAll() {
+  if (!isToday) return;
+  data.note = document.getElementById('note-area').value;
+  setSyncStatus('saving');
+
+  fetch(APPS_SCRIPT_URL, {
+    method: 'POST',
+    body: JSON.stringify({
+      action: 'write',
+      date: currentDate,
+      checkin: data.checkin,
+      checkout: data.checkout,
+      tasks: data.tasks,
+      expenses: data.expenses,
+      note: data.note
+    })
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(res) {
+    if (res.status === 'ok') {
+      setSyncStatus('ok');
+    } else {
+      setSyncStatus('error');
+    }
+  })
+  .catch(function() { setSyncStatus('error'); });
+}
+
+// =============================================
+// ATTENDANCE
+// =============================================
+function recordCheckin() {
+  if (data.checkin || !isToday) return;
+  var now = new Date();
+  data.checkin = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+  renderAttendance();
+  saveAll();
+}
+
+function recordCheckout() {
+  if (data.checkout || !isToday) return;
+  var now = new Date();
+  data.checkout = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+  renderAttendance();
+  saveAll();
+}
+
+function renderAttendance() {
+  var ci = document.getElementById('checkin-display');
+  var co = document.getElementById('checkout-display');
+  var bi = document.getElementById('btn-checkin');
+  var bo = document.getElementById('btn-checkout');
+
+  if (data.checkin) {
+    ci.textContent = data.checkin;
+    ci.className = 'att-time';
+    bi.textContent = T('already_in');
+    bi.className = 'att-btn done';
+    bi.disabled = true;
+  } else {
+    ci.textContent = '—';
+    ci.className = 'att-time empty';
+    bi.innerHTML = '<span>' + T('btn_in') + '</span>';
+    bi.className = 'att-btn checkin';
+    bi.disabled = !isToday;
+  }
+
+  if (data.checkout) {
+    co.textContent = data.checkout;
+    co.className = 'att-time';
+    bo.textContent = T('already_out');
+    bo.className = 'att-btn done';
+    bo.disabled = true;
+  } else {
+    co.textContent = '—';
+    co.className = 'att-time empty';
+    bo.innerHTML = '<span>' + T('btn_out') + '</span>';
+    bo.className = 'att-btn checkout';
+    bo.disabled = !isToday;
+  }
+}
+
+// =============================================
+// TASKS
+// =============================================
+function addTask() {
+  if (!isToday) return;
+  var inp = document.getElementById('task-input');
+  var txt = inp.value.trim();
+  if (!txt) return;
+  data.tasks.push({ text: txt, done: false, memo: '' });
+  inp.value = '';
+  renderTasks();
+  saveAll();
+}
+
+function completeTask(i) {
+  if (!isToday) return;
+  data.tasks[i].done = true;
+  renderTasks();
+  saveAll();
+}
+
+function updateMemo(i, val) {
+  data.tasks[i].memo = val;
+}
+
+function renderTasks() {
+  var list = document.getElementById('task-list');
+  if (data.tasks.length === 0) {
+    list.innerHTML = '<div class="no-tasks">' + T('no_tasks') + '</div>';
+    return;
+  }
+  list.innerHTML = data.tasks.map(function(t, i) {
+    var isDone = t.done;
+    return '<div class="task-item' + (isDone ? ' done-item' : '') + '">' +
+      '<div class="task-main">' +
+        '<span class="task-num">' + (i+1) + '.</span>' +
+        '<span class="task-text' + (isDone ? ' done-text' : '') + '">' + escHtml(t.text) + '</span>' +
+        (isDone
+          ? '<span class="complete-btn done-btn">' + T('done') + '</span>'
+          : (isToday ? '<button class="complete-btn" onclick="completeTask('+i+')">' + T('done') + '</button>' : '<span class="complete-btn done-btn">' + T('pending') + '</span>')
+        ) +
+      '</div>' +
+      (!isDone ? '<div class="task-memo"><textarea class="task-memo-input" rows="1" placeholder="' + T('memo_ph') + '" onchange="updateMemo('+i+',this.value)" onblur="updateMemo('+i+',this.value);if(isToday)saveAll()">' + escHtml(t.memo||'') + '</textarea></div>' : '') +
+    '</div>';
+  }).join('');
+}
+
+// =============================================
+// EXPENSES
+// =============================================
+function addExpense() {
+  if (!isToday) return;
+  var cat = document.getElementById('exp-cat').value;
+  var name = document.getElementById('exp-name').value.trim();
+  var amt = parseFloat(document.getElementById('exp-amount').value);
+  if (!name || isNaN(amt) || amt <= 0) return;
+  data.expenses.push({ cat: cat, name: name, amount: amt });
+  document.getElementById('exp-name').value = '';
+  document.getElementById('exp-amount').value = '';
+  renderExpenses();
+  saveAll();
+}
+
+function deleteExpense(i) {
+  if (!isToday) return;
+  data.expenses.splice(i, 1);
+  renderExpenses();
+  saveAll();
+}
+
+function renderExpenses() {
+  var list = document.getElementById('exp-list');
+  var total = document.getElementById('exp-total');
+
+  if (data.expenses.length === 0) {
+    list.innerHTML = '<div class="no-exp">' + T('no_exp') + '</div>';
+    total.style.display = 'none';
+    return;
+  }
+
+  var sum = 0;
+  list.innerHTML = data.expenses.map(function(e, i) {
+    sum += e.amount;
+    return '<div class="exp-row">' +
+      '<span class="exp-cat">' + (T('cat')[e.cat] || e.cat) + '</span>' +
+      '<span class="exp-name">' + escHtml(e.name) + '</span>' +
+      '<span class="exp-amount">AED ' + e.amount.toFixed(2) + '</span>' +
+      (isToday ? '<button class="exp-del" onclick="deleteExpense('+i+')" title="Delete">×</button>' : '') +
+    '</div>';
+  }).join('');
+
+  total.style.display = 'flex';
+  total.textContent = T('total') + ': AED ' + sum.toFixed(2);
+}
+
+// =============================================
+// RENDER ALL
+// =============================================
+function render() {
+  renderAttendance();
+  renderTasks();
+  renderExpenses();
+  document.getElementById('note-area').value = data.note || '';
+  applyLang();
+}
+
+function applyLang() {
+  document.getElementById('h-title').textContent = T('title');
+  document.getElementById('l-att').textContent = T('att');
+  document.getElementById('l-checkin').textContent = T('checkin');
+  document.getElementById('l-checkout').textContent = T('checkout');
+  document.getElementById('l-tasks').textContent = T('tasks');
+  document.getElementById('task-input').placeholder = T('task_ph');
+  document.getElementById('l-add').textContent = T('add');
+  document.getElementById('l-expense').textContent = T('expense');
+  document.getElementById('exp-name').placeholder = T('item');
+  document.getElementById('l-note').textContent = T('note');
+  document.getElementById('note-area').placeholder = T('note_ph');
+  document.getElementById('l-save').textContent = T('save');
+  document.getElementById('date-display').textContent = formatDisplayDate(currentDate);
+  document.getElementById('o-traffic').textContent = T('cat').traffic;
+  document.getElementById('o-office').textContent = T('cat').office;
+  document.getElementById('o-food').textContent = T('cat').food;
+  document.getElementById('o-other').textContent = T('cat').other;
+  // sync msg
+  var bar = document.getElementById('sync-bar');
+  if (!bar.classList.contains('error') && !bar.classList.contains('saving')) {
+    document.getElementById('sync-msg').textContent = T('sync_ok');
+  }
+  if (document.getElementById('readonly-notice').style.display !== 'none') {
+    document.getElementById('readonly-text').textContent = T('readonly');
+  }
+  // re-render task/expense for translated strings
+  renderTasks();
+  renderExpenses();
+}
+
+function setLang(l) {
+  lang = l;
+  document.querySelectorAll('.lang-btn').forEach(function(b) {
+    b.classList.toggle('active', b.textContent === (l === 'en' ? 'EN' : '한국어'));
+  });
+  applyLang();
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// =============================================
+// INIT
+// =============================================
+loadData();
+</script>
+</body>
+</html>
