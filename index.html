@@ -616,6 +616,36 @@ function renderAttendance() {
 }
 
 // =============================================
+// TRANSLATE
+// =============================================
+function translateText(text, targetLang, callback) {
+  var url = 'https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=' + targetLang + '&dt=t&q=' + encodeURIComponent(text);
+  fetch(url)
+    .then(function(r){ return r.json(); })
+    .then(function(res) {
+      var translated = '';
+      if (res && res[0]) {
+        res[0].forEach(function(item) { if(item[0]) translated += item[0]; });
+      }
+      callback(translated || text);
+    })
+    .catch(function() { callback(text); });
+}
+
+function translateTasks(tasks, targetLang, callback) {
+  if (tasks.length === 0) { callback([]); return; }
+  var translated = tasks.slice();
+  var pending = tasks.length;
+  tasks.forEach(function(t, i) {
+    translateText(t.text, targetLang, function(result) {
+      translated[i] = Object.assign({}, t, { displayText: result });
+      pending--;
+      if (pending === 0) callback(translated);
+    });
+  });
+}
+
+// =============================================
 // TASKS
 // =============================================
 function addTask() {
@@ -648,10 +678,11 @@ function renderTasks() {
   }
   list.innerHTML = data.tasks.map(function(t, i) {
     var isDone = t.done;
+    var displayText = t.displayText || t.text;
     return '<div class="task-item' + (isDone ? ' done-item' : '') + '">' +
       '<div class="task-main">' +
         '<span class="task-num">' + (i+1) + '.</span>' +
-        '<span class="task-text' + (isDone ? ' done-text' : '') + '">' + escHtml(t.text) + '</span>' +
+        '<span class="task-text' + (isDone ? ' done-text' : '') + '">' + escHtml(displayText) + '</span>' +
         (isDone
           ? '<span class="complete-btn done-btn">' + T('done') + '</span>'
           : (isToday ? '<button class="complete-btn" onclick="completeTask('+i+')">' + T('done') + '</button>' : '<span class="complete-btn done-btn">' + T('pending') + '</span>')
@@ -766,7 +797,12 @@ function setLang(l) {
   document.querySelectorAll('.lang-btn').forEach(function(b) {
     b.classList.toggle('active', b.textContent === (l === 'en' ? 'EN' : '한국어'));
   });
-  applyLang();
+  // 업무 내용 번역
+  var targetLang = l === 'ko' ? 'ko' : 'en';
+  translateTasks(data.tasks, targetLang, function(translatedTasks) {
+    data.tasks = translatedTasks;
+    applyLang();
+  });
 }
 
 // =============================================
