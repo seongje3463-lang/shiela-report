@@ -713,7 +713,7 @@ function renderTasks() {
       '<div class="task-main">' +
         '<span class="task-num">' + (i+1) + '.</span>' +
         (isEditing
-          ? '<input class="edit-input" id="edit-input-'+i+'" value="' + escHtml(t.text) + '" onkeydown="if(event.key==='Enter')saveEdit('+i+')">'
+          ? '<input class="edit-input" id="edit-input-'+i+'" value="' + escHtml(t.text) + '" onkeydown="if(event.keyCode===13)saveEdit('+i+')">'
           : '<span class="task-text' + (isDone ? ' done-text' : '') + '">' + escHtml(displayText) + '</span>'
         ) +
         (isDone
