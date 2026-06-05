@@ -327,39 +327,36 @@
   <!-- EXPENSE -->
   <div class="card">
     <div class="card-label" id="l-expense">Expense Details</div>
-    <div style="display:flex;gap:16px;align-items:flex-start;">
-      <!-- 왼쪽: 입력 + 리스트 -->
-      <div style="flex:1;min-width:0;">
-        <div class="exp-input-row" id="exp-input-area">
-          <select class="exp-select" id="exp-cat">
-            <option value="traffic" id="o-traffic">Traffic</option>
-            <option value="office" id="o-office">Office</option>
-            <option value="food" id="o-food">Food</option>
-            <option value="other" id="o-other">Other</option>
-          </select>
-          <input class="exp-input" id="exp-name" type="text" placeholder="Item name">
-          <input class="exp-input" id="exp-amount" type="number" placeholder="AED" min="0">
-          <button class="add-btn" onclick="addExpense()">+ Add</button>
-        </div>
-        <div class="exp-list" id="exp-list"></div>
-        <div class="exp-total" id="exp-total" style="display:none"></div>
-      </div>
-      <!-- 오른쪽: 도넛 차트 -->
-      <div style="width:160px;flex-shrink:0;">
+    <!-- 입력 폼 한 줄 -->
+    <div class="exp-input-row" id="exp-input-area">
+      <select class="exp-select" id="exp-cat">
+        <option value="traffic" id="o-traffic">Traffic</option>
+        <option value="office" id="o-office">Office</option>
+        <option value="food" id="o-food">Food</option>
+        <option value="other" id="o-other">Other</option>
+      </select>
+      <input class="exp-input" id="exp-name" type="text" placeholder="Item name">
+      <input class="exp-input" id="exp-amount" type="number" placeholder="AED" min="0" style="width:90px;">
+      <button class="add-btn" onclick="addExpense()">+ Add</button>
+    </div>
+    <!-- 리스트 -->
+    <div class="exp-list" id="exp-list"></div>
+    <div class="exp-total" id="exp-total" style="display:none"></div>
+    <!-- 도넛 차트 — 리스트 아래 가로 배치 -->
+    <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);display:flex;align-items:center;gap:24px;">
+      <div>
         <div style="display:flex;gap:4px;margin-bottom:10px;">
           <button class="chart-tab active" onclick="setChartTab('today',this)" id="tab-today">오늘</button>
           <button class="chart-tab" onclick="setChartTab('week',this)" id="tab-week">주간</button>
           <button class="chart-tab" onclick="setChartTab('month',this)" id="tab-month">월간</button>
         </div>
-        <div style="display:flex;flex-direction:column;align-items:center;gap:8px;">
-          <svg id="donut-svg" width="120" height="120" viewBox="0 0 120 120">
-            <circle cx="60" cy="60" r="45" fill="none" stroke="#e4e2db" stroke-width="18"/>
-            <text x="60" y="56" text-anchor="middle" font-size="9" fill="#a8a8a0" id="donut-label">합계</text>
-            <text x="60" y="70" text-anchor="middle" font-size="13" font-weight="600" fill="#1a1a18" id="donut-total">0</text>
-          </svg>
-          <div id="donut-legend" style="width:100%;display:flex;flex-direction:column;gap:3px;"></div>
-        </div>
+        <svg id="donut-svg" width="110" height="110" viewBox="0 0 120 120">
+          <circle cx="60" cy="60" r="45" fill="none" stroke="#e4e2db" stroke-width="18"/>
+          <text x="60" y="56" text-anchor="middle" font-size="9" fill="#a8a8a0" id="donut-label">합계</text>
+          <text x="60" y="70" text-anchor="middle" font-size="13" font-weight="600" fill="#1a1a18" id="donut-total">0</text>
+        </svg>
       </div>
+      <div id="donut-legend" style="display:flex;flex-direction:column;gap:6px;"></div>
     </div>
   </div>
 
