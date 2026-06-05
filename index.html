@@ -173,6 +173,17 @@
     transition: all 0.15s; white-space: nowrap;
   }
   .complete-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .edit-btn {
+    padding: 5px 10px; border-radius: 6px; border: 1px solid var(--border);
+    background: #fff; font-family: 'DM Sans', sans-serif;
+    font-size: 11px; font-weight: 500; cursor: pointer; color: var(--text-sub);
+    transition: all 0.15s; white-space: nowrap; margin-left: 4px;
+  }
+  .edit-btn:hover { border-color: var(--warn); color: var(--warn); }
+  .edit-input {
+    flex: 1; padding: 5px 8px; border-radius: 6px; border: 1px solid var(--accent);
+    font-family: 'DM Sans', sans-serif; font-size: 14px; outline: none;
+  }
   .complete-btn.done-btn {
     background: var(--accent-light); color: var(--accent);
     border-color: var(--accent-light); cursor: default;
@@ -345,7 +356,7 @@
       </select>
       <input class="exp-input exp-name-input" id="exp-name" type="text" placeholder="항목명">
       <input class="exp-input exp-amt-input" id="exp-amount" type="number" placeholder="AED" min="0">
-      <button class="add-btn" onclick="addExpense()">+ Add</button>
+      <button class="add-btn" id="l-exp-add" onclick="addExpense()">+ Add</button>
     </div>
     <!-- 리스트 -->
     <div class="exp-list" id="exp-list"></div>
@@ -403,7 +414,7 @@ var TX = {
     btn_in: 'Clock In', btn_out: 'Clock Out',
     already_in: 'Already recorded', already_out: 'Already recorded',
     tasks: "TODAY'S WORK", task_ph: 'Add a task...', add: '+ Add',
-    done: 'Complete', pending: 'Pending',
+    done: 'Complete', pending: 'Pending', edit: 'Edit', save_edit: 'Save',
     memo_ph: 'Reason / note...',
     expense: 'EXPENSE DETAILS', item: 'Item name', aed: 'AED',
     cat: { traffic: 'Traffic', office: 'Office', food: 'Food', other: 'Other' },
@@ -425,7 +436,7 @@ var TX = {
     btn_in: '출근 기록', btn_out: '퇴근 기록',
     already_in: '이미 기록됨', already_out: '이미 기록됨',
     tasks: '오늘의 업무', task_ph: '업무 내용 입력...', add: '+ 추가',
-    done: '완료', pending: '진행중',
+    done: '완료', pending: '진행중', edit: '수정', save_edit: '저장',
     memo_ph: '사유 / 메모...',
     expense: '지출 내역', item: '항목명', aed: 'AED',
     cat: { traffic: '교통', office: '사무', food: '식비', other: '기타' },
@@ -659,6 +670,24 @@ function addTask() {
   saveAll();
 }
 
+function startEdit(i) {
+  data.tasks[i].editing = true;
+  renderTasks();
+  var inp = document.getElementById('edit-input-' + i);
+  if (inp) { inp.focus(); inp.select(); }
+}
+
+function saveEdit(i) {
+  var inp = document.getElementById('edit-input-' + i);
+  if (inp && inp.value.trim()) {
+    data.tasks[i].text = inp.value.trim();
+    data.tasks[i].displayText = inp.value.trim();
+  }
+  data.tasks[i].editing = false;
+  renderTasks();
+  saveAll();
+}
+
 function completeTask(i) {
   if (!isToday) return;
   data.tasks[i].done = true;
@@ -679,16 +708,26 @@ function renderTasks() {
   list.innerHTML = data.tasks.map(function(t, i) {
     var isDone = t.done;
     var displayText = t.displayText || t.text;
+    var isEditing = t.editing;
     return '<div class="task-item' + (isDone ? ' done-item' : '') + '">' +
       '<div class="task-main">' +
         '<span class="task-num">' + (i+1) + '.</span>' +
-        '<span class="task-text' + (isDone ? ' done-text' : '') + '">' + escHtml(displayText) + '</span>' +
+        (isEditing
+          ? '<input class="edit-input" id="edit-input-'+i+'" value="' + escHtml(t.text) + '" onkeydown="if(event.key==='Enter')saveEdit('+i+')">'
+          : '<span class="task-text' + (isDone ? ' done-text' : '') + '">' + escHtml(displayText) + '</span>'
+        ) +
         (isDone
           ? '<span class="complete-btn done-btn">' + T('done') + '</span>'
-          : (isToday ? '<button class="complete-btn" onclick="completeTask('+i+')">' + T('done') + '</button>' : '<span class="complete-btn done-btn">' + T('pending') + '</span>')
+          : (isToday
+              ? (isEditing
+                  ? '<button class="complete-btn" onclick="saveEdit('+i+')">' + T('save_edit') + '</button>'
+                  : '<button class="complete-btn" onclick="completeTask('+i+')">' + T('done') + '</button><button class="edit-btn" onclick="startEdit('+i+')">' + T('edit') + '</button>'
+                )
+              : '<span class="complete-btn done-btn">' + T('pending') + '</span>'
+            )
         ) +
       '</div>' +
-      (!isDone ? '<div class="task-memo"><textarea class="task-memo-input" rows="1" placeholder="' + T('memo_ph') + '" onchange="updateMemo('+i+',this.value)" onblur="updateMemo('+i+',this.value);if(isToday)saveAll()">' + escHtml(t.memo||'') + '</textarea></div>' : '') +
+      (!isDone && !isEditing ? '<div class="task-memo"><textarea class="task-memo-input" rows="1" placeholder="' + T('memo_ph') + '" onchange="updateMemo('+i+',this.value)" onblur="updateMemo('+i+',this.value);if(isToday)saveAll()">' + escHtml(t.memo||'') + '</textarea></div>' : '') +
     '</div>';
   }).join('');
 }
@@ -767,6 +806,7 @@ function applyLang() {
   document.getElementById('task-input').placeholder = T('task_ph');
   document.getElementById('l-add').textContent = T('add');
   document.getElementById('l-expense').textContent = T('expense');
+  document.getElementById('l-exp-add').textContent = T('add');
   document.getElementById('exp-name').placeholder = T('item');
   document.getElementById('l-note').textContent = T('note');
   document.getElementById('note-area').placeholder = T('note_ph');
