@@ -268,12 +268,12 @@
 
 <div class="header">
   <div>
-    <div class="header-title" id="h-title">Shiela — Daily Report</div>
+    <div class="header-title" id="h-title">실라 — 업무 보고</div>
     <div class="header-sub">초코렌트카 Daily Work Log</div>
   </div>
   <div class="lang-toggle">
-    <button class="lang-btn active" onclick="setLang('en')">EN</button>
-    <button class="lang-btn" onclick="setLang('ko')">한국어</button>
+    <button class="lang-btn" onclick="setLang('en')">EN</button>
+    <button class="lang-btn active" onclick="setLang('ko')">한국어</button>
   </div>
 </div>
 
@@ -290,7 +290,7 @@
   <div class="sync-bar" id="sync-bar" style="justify-content:space-between;">
     <div style="display:flex;align-items:center;gap:8px;">
       <div class="sync-dot" id="sync-dot"></div>
-      <span id="sync-msg">Synced with Google Sheets</span>
+      <span id="sync-msg">구글 시트와 동기화됨</span>
     </div>
     <button onclick="loadData()" style="background:none;border:none;cursor:pointer;font-size:15px;color:currentColor;padding:0 2px;" title="Refresh">↻</button>
   </div>
@@ -302,20 +302,20 @@
 
   <!-- ATTENDANCE -->
   <div class="card">
-    <div class="card-label" id="l-att">ATTENDANCE</div>
+    <div class="card-label" id="l-att">출퇴근 기록</div>
     <div class="att-grid">
       <div class="att-box">
-        <div class="att-box-label" id="l-checkin">Check-in time</div>
+        <div class="att-box-label" id="l-checkin">출근 시간</div>
         <div class="att-time" id="checkin-display">—</div>
         <button class="att-btn checkin" id="btn-checkin" onclick="recordCheckin()">
-          <span id="l-btn-checkin">Clock In</span>
+          <span id="l-btn-checkin">출근 기록</span>
         </button>
       </div>
       <div class="att-box">
-        <div class="att-box-label" id="l-checkout">Check-out time</div>
+        <div class="att-box-label" id="l-checkout">퇴근 시간</div>
         <div class="att-time" id="checkout-display">—</div>
         <button class="att-btn checkout" id="btn-checkout" onclick="recordCheckout()">
-          <span id="l-btn-checkout">Clock Out</span>
+          <span id="l-btn-checkout">퇴근 기록</span>
         </button>
       </div>
     </div>
@@ -323,26 +323,26 @@
 
   <!-- TASKS -->
   <div class="card">
-    <div class="card-label" id="l-tasks">TODAY'S WORK</div>
+    <div class="card-label" id="l-tasks">오늘의 업무</div>
     <div class="task-input-row" id="task-input-area">
-      <input class="task-input" id="task-input" type="text" placeholder="Add a task..." onkeydown="if(event.key==='Enter')addTask()">
-      <button class="add-btn" onclick="addTask()" id="l-add">+ Add</button>
+      <input class="task-input" id="task-input" type="text" placeholder="업무 내용 입력..." onkeydown="if(event.key==='Enter')addTask()">
+      <button class="add-btn" onclick="addTask()" id="l-add">+ 추가</button>
     </div>
     <div class="task-list" id="task-list"></div>
   </div>
 
   <!-- EXPENSE -->
   <div class="card">
-    <div class="card-label" id="l-expense">EXPENSE DETAILS</div>
+    <div class="card-label" id="l-expense">지출 내역</div>
     <!-- 입력 폼 한 줄 -->
     <div class="exp-input-row" id="exp-input-area">
       <select class="exp-select" id="exp-cat">
-        <option value="traffic" id="o-traffic">Traffic</option>
-        <option value="office" id="o-office">Office</option>
-        <option value="food" id="o-food">Food</option>
-        <option value="other" id="o-other">Other</option>
+        <option value="traffic" id="o-traffic">교통</option>
+        <option value="office" id="o-office">사무</option>
+        <option value="food" id="o-food">식비</option>
+        <option value="other" id="o-other">기타</option>
       </select>
-      <input class="exp-input exp-name-input" id="exp-name" type="text" placeholder="Item name">
+      <input class="exp-input exp-name-input" id="exp-name" type="text" placeholder="항목명">
       <input class="exp-input exp-amt-input" id="exp-amount" type="number" placeholder="AED" min="0">
       <button class="add-btn" onclick="addExpense()">+ Add</button>
     </div>
@@ -369,10 +369,10 @@
 
   <!-- NOTE -->
   <div class="card">
-    <div class="card-label" id="l-note">SPECIAL NOTES</div>
-    <textarea class="note-area" id="note-area" placeholder="Any special notes for today..."></textarea>
+    <div class="card-label" id="l-note">특이사항</div>
+    <textarea class="note-area" id="note-area" placeholder="오늘의 특이사항을 입력하세요..."></textarea>
     <button class="save-btn" id="save-btn" onclick="saveAll()">
-      <span id="l-save">Save</span>
+      <span id="l-save">저장</span>
     </button>
   </div>
 
@@ -389,7 +389,7 @@ var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzZ34WE_LQZj3nuhd
 // =============================================
 var currentDate = getTodayStr();
 var isToday = true;
-var lang = 'en';
+var lang = 'ko';
 var data = {
   checkin: '', checkout: '',
   tasks: [], expenses: [], note: ''
