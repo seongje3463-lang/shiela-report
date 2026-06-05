@@ -225,6 +225,14 @@
   }
   .no-exp { font-size: 14px; color: var(--text-dim); text-align: center; padding: 16px 0; }
 
+  /* CHART TABS */
+  .chart-tab {
+    flex:1; font-family:'DM Sans',sans-serif; font-size:11px; font-weight:500;
+    padding:4px 0; border-radius:6px; border:1px solid var(--border);
+    background:transparent; color:var(--text-sub); cursor:pointer; transition:all 0.15s;
+  }
+  .chart-tab.active { background:var(--text); color:#fff; border-color:var(--text); }
+
   /* NOTE */
   .note-area {
     width: 100%; padding: 12px; border-radius: 8px;
@@ -319,19 +327,40 @@
   <!-- EXPENSE -->
   <div class="card">
     <div class="card-label" id="l-expense">Expense Details</div>
-    <div class="exp-input-row" id="exp-input-area">
-      <select class="exp-select" id="exp-cat">
-        <option value="traffic" id="o-traffic">Traffic</option>
-        <option value="office" id="o-office">Office</option>
-        <option value="food" id="o-food">Food</option>
-        <option value="other" id="o-other">Other</option>
-      </select>
-      <input class="exp-input" id="exp-name" type="text" placeholder="Item name">
-      <input class="exp-input" id="exp-amount" type="number" placeholder="AED" min="0">
-      <button class="add-btn" onclick="addExpense()">+ Add</button>
+    <div style="display:flex;gap:16px;align-items:flex-start;">
+      <!-- 왼쪽: 입력 + 리스트 -->
+      <div style="flex:1;min-width:0;">
+        <div class="exp-input-row" id="exp-input-area">
+          <select class="exp-select" id="exp-cat">
+            <option value="traffic" id="o-traffic">Traffic</option>
+            <option value="office" id="o-office">Office</option>
+            <option value="food" id="o-food">Food</option>
+            <option value="other" id="o-other">Other</option>
+          </select>
+          <input class="exp-input" id="exp-name" type="text" placeholder="Item name">
+          <input class="exp-input" id="exp-amount" type="number" placeholder="AED" min="0">
+          <button class="add-btn" onclick="addExpense()">+ Add</button>
+        </div>
+        <div class="exp-list" id="exp-list"></div>
+        <div class="exp-total" id="exp-total" style="display:none"></div>
+      </div>
+      <!-- 오른쪽: 도넛 차트 -->
+      <div style="width:160px;flex-shrink:0;">
+        <div style="display:flex;gap:4px;margin-bottom:10px;">
+          <button class="chart-tab active" onclick="setChartTab('today',this)" id="tab-today">오늘</button>
+          <button class="chart-tab" onclick="setChartTab('week',this)" id="tab-week">주간</button>
+          <button class="chart-tab" onclick="setChartTab('month',this)" id="tab-month">월간</button>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:8px;">
+          <svg id="donut-svg" width="120" height="120" viewBox="0 0 120 120">
+            <circle cx="60" cy="60" r="45" fill="none" stroke="#e4e2db" stroke-width="18"/>
+            <text x="60" y="56" text-anchor="middle" font-size="9" fill="#a8a8a0" id="donut-label">합계</text>
+            <text x="60" y="70" text-anchor="middle" font-size="13" font-weight="600" fill="#1a1a18" id="donut-total">0</text>
+          </svg>
+          <div id="donut-legend" style="width:100%;display:flex;flex-direction:column;gap:3px;"></div>
+        </div>
+      </div>
     </div>
-    <div class="exp-list" id="exp-list"></div>
-    <div class="exp-total" id="exp-total" style="display:none"></div>
   </div>
 
   <!-- NOTE -->
@@ -378,6 +407,7 @@ var TX = {
     save: 'Save',
     no_tasks: 'No tasks registered.',
     no_exp: 'No expense records.',
+    tab_today: 'Today', tab_week: 'Week', tab_month: 'Month',
     sync_ok: 'Synced with Google Sheets',
     sync_saving: 'Saving...',
     sync_err: 'Connection error. Check Apps Script URL.',
@@ -399,6 +429,7 @@ var TX = {
     save: '저장',
     no_tasks: '등록된 업무가 없습니다.',
     no_exp: '지출 내역이 없습니다.',
+    tab_today: '오늘', tab_week: '주간', tab_month: '월간',
     sync_ok: '구글 시트와 동기화됨',
     sync_saving: '저장 중...',
     sync_err: '연결 오류. Apps Script URL을 확인하세요.',
@@ -641,6 +672,7 @@ function addExpense() {
   document.getElementById('exp-name').value = '';
   document.getElementById('exp-amount').value = '';
   renderExpenses();
+  renderDonut();
   saveAll();
 }
 
@@ -685,6 +717,7 @@ function render() {
   renderExpenses();
   document.getElementById('note-area').value = data.note || '';
   applyLang();
+  renderDonut();
 }
 
 function applyLang() {
@@ -714,6 +747,8 @@ function applyLang() {
     document.getElementById('readonly-text').textContent = T('readonly');
   }
   // re-render all sections for translated strings
+  updateTabLabels();
+  renderDonut();
   renderAttendance();
   renderTasks();
   renderExpenses();
@@ -725,6 +760,94 @@ function setLang(l) {
     b.classList.toggle('active', b.textContent === (l === 'en' ? 'EN' : '한국어'));
   });
   applyLang();
+}
+
+// =============================================
+// DONUT CHART
+// =============================================
+var chartTab = 'today';
+
+function setChartTab(tab, btn) {
+  chartTab = tab;
+  document.querySelectorAll('.chart-tab').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+  updateTabLabels();
+  renderDonut();
+}
+
+function updateTabLabels() {
+  var t = [T('tab_today'), T('tab_week'), T('tab_month')];
+  var td = document.getElementById('tab-today');
+  var tw = document.getElementById('tab-week');
+  var tm = document.getElementById('tab-month');
+  if(td) td.textContent = t[0];
+  if(tw) tw.textContent = t[1];
+  if(tm) tm.textContent = t[2];
+}
+
+function renderDonut() {
+  var expenses = [];
+  if (chartTab === 'today') {
+    expenses = data.expenses || [];
+  } else {
+    // 주간/월간은 오늘 데이터만 표시 (향후 확장 가능)
+    expenses = data.expenses || [];
+  }
+
+  var cats = { traffic: 0, office: 0, food: 0, other: 0 };
+  expenses.forEach(function(e){ cats[e.cat] = (cats[e.cat]||0) + e.amount; });
+  var total = Object.values(cats).reduce(function(a,b){ return a+b; }, 0);
+
+  var colors = { traffic: '#f59e0b', office: '#3b82f6', food: '#ec4899', other: '#8b5cf6' };
+  var svg = document.getElementById('donut-svg');
+  var legend = document.getElementById('donut-legend');
+  var dtotal = document.getElementById('donut-total');
+  var dlabel = document.getElementById('donut-label');
+  if (!svg || !legend) return;
+
+  // 기존 arc 제거
+  var oldArcs = svg.querySelectorAll('.arc');
+  oldArcs.forEach(function(a){ a.remove(); });
+
+  dtotal.textContent = total > 0 ? Math.round(total) : '0';
+  dlabel.textContent = T('total');
+
+  var r = 45, cx = 60, cy = 60, circ = 2 * Math.PI * r;
+  var offset = 0;
+  var legendHtml = '';
+
+  if (total === 0) {
+    // 빈 상태
+    legend.innerHTML = '<div style="font-size:11px;color:var(--text-dim);text-align:center;">' + T('no_exp') + '</div>';
+    return;
+  }
+
+  Object.keys(cats).forEach(function(cat) {
+    var val = cats[cat];
+    if (val <= 0) return;
+    var pct = val / total;
+    var dash = pct * circ;
+    var circle = document.createElementNS('http://www.w3.org/2000/svg','circle');
+    circle.setAttribute('class','arc');
+    circle.setAttribute('cx', cx);
+    circle.setAttribute('cy', cy);
+    circle.setAttribute('r', r);
+    circle.setAttribute('fill','none');
+    circle.setAttribute('stroke', colors[cat]);
+    circle.setAttribute('stroke-width','18');
+    circle.setAttribute('stroke-dasharray', dash + ' ' + (circ - dash));
+    circle.setAttribute('stroke-dashoffset', String(-(offset * circ)));
+    circle.setAttribute('transform','rotate(-90 60 60)');
+    svg.insertBefore(circle, svg.querySelector('text'));
+    offset += pct;
+
+    var catName = T('cat')[cat] || cat;
+    legendHtml += '<div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-sub);">' +
+      '<span style="width:7px;height:7px;border-radius:50%;background:' + colors[cat] + ';flex-shrink:0;"></span>' +
+      catName + ' ' + Math.round(pct*100) + '%</div>';
+  });
+
+  legend.innerHTML = legendHtml;
 }
 
 function escHtml(s) {
