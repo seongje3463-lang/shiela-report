@@ -713,7 +713,8 @@ function applyLang() {
   if (document.getElementById('readonly-notice').style.display !== 'none') {
     document.getElementById('readonly-text').textContent = T('readonly');
   }
-  // re-render task/expense for translated strings
+  // re-render all sections for translated strings
+  renderAttendance();
   renderTasks();
   renderExpenses();
 }
