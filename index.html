@@ -190,9 +190,12 @@
 
   /* EXPENSE */
   .exp-input-row {
-    display: grid; grid-template-columns: 130px 1fr 100px auto; gap: 8px;
+    display: flex; flex-wrap: wrap; gap: 8px;
     margin-bottom: 14px; align-items: center;
   }
+  .exp-input-row .exp-select { width: 120px; flex-shrink: 0; }
+  .exp-input-row .exp-name-input { flex: 1; min-width: 120px; }
+  .exp-input-row .exp-amt-input { width: 90px; flex-shrink: 0; }
   .exp-select, .exp-input {
     padding: 9px 10px; border-radius: 8px; border: 1px solid var(--border);
     font-family: 'DM Sans', sans-serif; font-size: 13px;
@@ -227,9 +230,10 @@
 
   /* CHART TABS */
   .chart-tab {
-    flex:1; font-family:'DM Sans',sans-serif; font-size:11px; font-weight:500;
-    padding:4px 0; border-radius:6px; border:1px solid var(--border);
+    width:44px; font-family:'DM Sans',sans-serif; font-size:11px; font-weight:500;
+    padding:5px 0; border-radius:6px; border:1px solid var(--border);
     background:transparent; color:var(--text-sub); cursor:pointer; transition:all 0.15s;
+    text-align:center;
   }
   .chart-tab.active { background:var(--text); color:#fff; border-color:var(--text); }
 
@@ -335,8 +339,8 @@
         <option value="food" id="o-food">Food</option>
         <option value="other" id="o-other">Other</option>
       </select>
-      <input class="exp-input" id="exp-name" type="text" placeholder="Item name">
-      <input class="exp-input" id="exp-amount" type="number" placeholder="AED" min="0" style="width:90px;">
+      <input class="exp-input exp-name-input" id="exp-name" type="text" placeholder="Item name">
+      <input class="exp-input exp-amt-input" id="exp-amount" type="number" placeholder="AED" min="0">
       <button class="add-btn" onclick="addExpense()">+ Add</button>
     </div>
     <!-- 리스트 -->
