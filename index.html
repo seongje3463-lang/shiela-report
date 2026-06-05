@@ -287,9 +287,12 @@
   </div>
 
   <!-- SYNC STATUS -->
-  <div class="sync-bar" id="sync-bar">
-    <div class="sync-dot" id="sync-dot"></div>
-    <span id="sync-msg">Connected</span>
+  <div class="sync-bar" id="sync-bar" style="justify-content:space-between;">
+    <div style="display:flex;align-items:center;gap:8px;">
+      <div class="sync-dot" id="sync-dot"></div>
+      <span id="sync-msg">Connected</span>
+    </div>
+    <button onclick="loadData()" style="background:none;border:none;cursor:pointer;font-size:15px;color:currentColor;padding:0 2px;" title="Refresh">↻</button>
   </div>
 
   <!-- READONLY NOTICE -->
