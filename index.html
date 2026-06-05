@@ -290,7 +290,7 @@
   <div class="sync-bar" id="sync-bar" style="justify-content:space-between;">
     <div style="display:flex;align-items:center;gap:8px;">
       <div class="sync-dot" id="sync-dot"></div>
-      <span id="sync-msg">Connected</span>
+      <span id="sync-msg">Synced with Google Sheets</span>
     </div>
     <button onclick="loadData()" style="background:none;border:none;cursor:pointer;font-size:15px;color:currentColor;padding:0 2px;" title="Refresh">↻</button>
   </div>
@@ -302,7 +302,7 @@
 
   <!-- ATTENDANCE -->
   <div class="card">
-    <div class="card-label" id="l-att">Attendance</div>
+    <div class="card-label" id="l-att">ATTENDANCE</div>
     <div class="att-grid">
       <div class="att-box">
         <div class="att-box-label" id="l-checkin">Check-in time</div>
@@ -323,7 +323,7 @@
 
   <!-- TASKS -->
   <div class="card">
-    <div class="card-label" id="l-tasks">Today's Work</div>
+    <div class="card-label" id="l-tasks">TODAY'S WORK</div>
     <div class="task-input-row" id="task-input-area">
       <input class="task-input" id="task-input" type="text" placeholder="Add a task..." onkeydown="if(event.key==='Enter')addTask()">
       <button class="add-btn" onclick="addTask()" id="l-add">+ Add</button>
@@ -333,7 +333,7 @@
 
   <!-- EXPENSE -->
   <div class="card">
-    <div class="card-label" id="l-expense">Expense Details</div>
+    <div class="card-label" id="l-expense">EXPENSE DETAILS</div>
     <!-- 입력 폼 한 줄 -->
     <div class="exp-input-row" id="exp-input-area">
       <select class="exp-select" id="exp-cat">
@@ -369,7 +369,7 @@
 
   <!-- NOTE -->
   <div class="card">
-    <div class="card-label" id="l-note">Special Notes</div>
+    <div class="card-label" id="l-note">SPECIAL NOTES</div>
     <textarea class="note-area" id="note-area" placeholder="Any special notes for today..."></textarea>
     <button class="save-btn" id="save-btn" onclick="saveAll()">
       <span id="l-save">Save</span>
@@ -865,6 +865,7 @@ function escHtml(s) {
 // =============================================
 // INIT
 // =============================================
+applyLang();
 loadData();
 </script>
 </body>
