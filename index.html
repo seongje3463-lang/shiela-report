@@ -590,13 +590,13 @@ function renderAttendance() {
   if (data.checkin) {
     ci.textContent = data.checkin;
     ci.className = 'att-time';
-    bi.textContent = T('already_in');
+    bi.innerHTML = '<span id="l-btn-checkin">' + T('already_in') + '</span>';
     bi.className = 'att-btn done';
     bi.disabled = true;
   } else {
     ci.textContent = '—';
     ci.className = 'att-time empty';
-    bi.innerHTML = '<span>' + T('btn_in') + '</span>';
+    bi.innerHTML = '<span id="l-btn-checkin">' + T('btn_in') + '</span>';
     bi.className = 'att-btn checkin';
     bi.disabled = !isToday;
   }
@@ -604,13 +604,13 @@ function renderAttendance() {
   if (data.checkout) {
     co.textContent = data.checkout;
     co.className = 'att-time';
-    bo.textContent = T('already_out');
+    bo.innerHTML = '<span id="l-btn-checkout">' + T('already_out') + '</span>';
     bo.className = 'att-btn done';
     bo.disabled = true;
   } else {
     co.textContent = '—';
     co.className = 'att-time empty';
-    bo.innerHTML = '<span>' + T('btn_out') + '</span>';
+    bo.innerHTML = '<span id="l-btn-checkout">' + T('btn_out') + '</span>';
     bo.className = 'att-btn checkout';
     bo.disabled = !isToday;
   }
@@ -729,6 +729,10 @@ function applyLang() {
   document.getElementById('l-att').textContent = T('att');
   document.getElementById('l-checkin').textContent = T('checkin');
   document.getElementById('l-checkout').textContent = T('checkout');
+  var lbi = document.getElementById('l-btn-checkin');
+  var lbo = document.getElementById('l-btn-checkout');
+  if(lbi) lbi.textContent = T('btn_in');
+  if(lbo) lbo.textContent = T('btn_out');
   document.getElementById('l-tasks').textContent = T('tasks');
   document.getElementById('task-input').placeholder = T('task_ph');
   document.getElementById('l-add').textContent = T('add');
