@@ -383,7 +383,7 @@
 // =============================================
 // CONFIGURATION — Apps Script URL 입력
 // =============================================
-var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzZ34WE_LQZj3nuhdMUzoctkSOhBvWVLx8TqhFZ-y9WXTkvOoAeCjmn7iJLXllsx_k6/exec';
+var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzGtOwzKsKvMYgxFgEtMJFTHXgj9ZJWiSFDgdXZKfMdAtgQN81x7COHizPCDq4StBNT/exec';
 
 // =============================================
 // STATE
@@ -540,18 +540,16 @@ function saveAll() {
   data.note = document.getElementById('note-area').value;
   setSyncStatus('saving');
 
-  fetch(APPS_SCRIPT_URL, {
-    method: 'POST',
-    body: JSON.stringify({
-      action: 'write',
-      date: currentDate,
-      checkin: data.checkin,
-      checkout: data.checkout,
-      tasks: data.tasks,
-      expenses: data.expenses,
-      note: data.note
-    })
-  })
+  var params = '?action=write' +
+    '&date=' + encodeURIComponent(currentDate) +
+    '&checkin=' + encodeURIComponent(data.checkin || '') +
+    '&checkout=' + encodeURIComponent(data.checkout || '') +
+    '&tasks=' + encodeURIComponent(JSON.stringify(data.tasks || [])) +
+    '&expenses=' + encodeURIComponent(JSON.stringify(data.expenses || [])) +
+    '&note=' + encodeURIComponent(data.note || '') +
+    '&_=' + Date.now();
+
+  fetch(APPS_SCRIPT_URL + params)
   .then(function(r){ return r.json(); })
   .then(function(res) {
     if (res.status === 'ok') {
