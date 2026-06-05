@@ -240,6 +240,22 @@
   }
   .no-exp { font-size: 14px; color: var(--text-dim); text-align: center; padding: 16px 0; }
 
+  /* NOTE LIST */
+  .note-item {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 10px 12px; border-radius: 8px; background: var(--bg);
+    font-size: 13px; margin-bottom: 6px;
+  }
+  .note-item-num { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--text-dim); min-width: 20px; margin-top: 1px; }
+  .note-item-date { font-size: 11px; color: var(--text-dim); white-space: nowrap; margin-top: 1px; }
+  .note-item-text { flex: 1; line-height: 1.5; }
+  .note-del-btn {
+    background: none; border: none; cursor: pointer;
+    color: var(--text-dim); font-size: 14px; padding: 2px 4px;
+    border-radius: 4px; transition: color 0.15s; flex-shrink: 0;
+  }
+  .note-del-btn:hover { color: var(--danger); }
+
   /* CHART TABS */
   .chart-tab {
     width:44px; font-family:'DM Sans',sans-serif; font-size:11px; font-weight:500;
@@ -382,8 +398,15 @@
   <!-- NOTE -->
   <div class="card">
     <div class="card-label" id="l-note">특이사항</div>
-    <textarea class="note-area" id="note-area" placeholder="오늘의 특이사항을 입력하세요..."></textarea>
-    <button class="save-btn" id="save-btn" onclick="saveAll()">
+    <!-- 입력 영역 -->
+    <div style="display:flex;gap:8px;margin-bottom:14px;">
+      <textarea class="note-area" id="note-input" placeholder="오늘의 특이사항을 입력하세요..." style="flex:1;min-height:70px;resize:vertical;"></textarea>
+      <button class="add-btn" id="l-note-add" onclick="addNote()" style="align-self:flex-end;padding:10px 16px;">+ 추가</button>
+    </div>
+    <!-- 누적 목록 -->
+    <div id="note-list"></div>
+    <!-- 저장 버튼 (출퇴근/업무/지출 저장용) -->
+    <button class="save-btn" id="save-btn" onclick="saveAll()" style="display:none;">
       <span id="l-save">저장</span>
     </button>
   </div>
@@ -404,7 +427,7 @@ var isToday = true;
 var lang = 'ko';
 var data = {
   checkin: '', checkout: '',
-  tasks: [], expenses: [], note: ''
+  tasks: [], expenses: [], note: '', notes: []
 };
 
 var TX = {
@@ -429,6 +452,7 @@ var TX = {
     sync_err: 'Connection error. Check Apps Script URL.',
     sync_loading: 'Loading data...',
     readonly: 'This is a past record. Changes cannot be saved.',
+    note_add: '+ Add', note_del: 'Delete', no_notes: 'No notes yet.',
   },
   ko: {
     title: '실라 — 업무 보고',
@@ -451,6 +475,7 @@ var TX = {
     sync_err: '연결 오류. Apps Script URL을 확인하세요.',
     sync_loading: '데이터 불러오는 중...',
     readonly: '과거 날짜입니다. 수정 후 저장이 불가합니다.',
+    note_add: '+ 추가', note_del: '삭제', no_notes: '특이사항이 없습니다.',
   }
 };
 
@@ -459,6 +484,14 @@ function T(k) { return TX[lang][k] || k; }
 // =============================================
 // DATE HELPERS
 // =============================================
+function getYesterdayStr() {
+  var d = new Date();
+  d.setDate(d.getDate() - 1);
+  return d.getFullYear() + '-' +
+    String(d.getMonth()+1).padStart(2,'0') + '-' +
+    String(d.getDate()).padStart(2,'0');
+}
+
 function getTodayStr() {
   var d = new Date();
   return d.getFullYear() + '-' +
@@ -529,8 +562,26 @@ function loadData() {
           data.tasks = res.record.tasks || [];
           data.expenses = res.record.expenses || [];
           data.note = res.record.note || '';
+          data.notes = res.record.notes || [];
         } else {
-          data = { checkin:'', checkout:'', tasks:[], expenses:[], note:'' };
+          // 오늘 데이터 없으면 전날 미완료 업무 이월
+          var yesterday = getYesterdayStr();
+          var yurl = APPS_SCRIPT_URL + '?action=read&date=' + yesterday + '&_=' + Date.now();
+          data = { checkin:'', checkout:'', tasks:[], expenses:[], note:'', notes: res.allNotes || [] };
+          fetch(yurl)
+            .then(function(r2){ return r2.json(); })
+            .then(function(res2) {
+              if (res2.status === 'ok' && res2.record) {
+                var carried = (res2.record.tasks || []).filter(function(t){ return !t.done; }).map(function(t){
+                  return Object.assign({}, t, { carried: true });
+                });
+                data.tasks = carried;
+              }
+              setSyncStatus('ok');
+              render();
+            })
+            .catch(function() { setSyncStatus('ok'); render(); });
+          return;
         }
         setSyncStatus('ok');
         render();
@@ -541,7 +592,7 @@ function loadData() {
     .catch(function() {
       setSyncStatus('error');
       // 오류여도 빈 상태로 렌더
-      data = { checkin:'', checkout:'', tasks:[], expenses:[], note:'' };
+      data = { checkin:'', checkout:'', tasks:[], expenses:[], note:'', notes:[] };
       render();
     });
 }
@@ -558,6 +609,7 @@ function saveAll() {
     '&tasks=' + encodeURIComponent(JSON.stringify(data.tasks || [])) +
     '&expenses=' + encodeURIComponent(JSON.stringify(data.expenses || [])) +
     '&note=' + encodeURIComponent(data.note || '') +
+    '&notes=' + encodeURIComponent(JSON.stringify(data.notes || [])) +
     '&_=' + Date.now();
 
   fetch(APPS_SCRIPT_URL + params)
@@ -788,7 +840,7 @@ function render() {
   renderAttendance();
   renderTasks();
   renderExpenses();
-  document.getElementById('note-area').value = data.note || '';
+  renderNotes();
   applyLang();
   renderDonut();
 }
@@ -809,7 +861,8 @@ function applyLang() {
   document.getElementById('l-exp-add').textContent = T('add');
   document.getElementById('exp-name').placeholder = T('item');
   document.getElementById('l-note').textContent = T('note');
-  document.getElementById('note-area').placeholder = T('note_ph');
+  var lna = document.getElementById('l-note-add'); if(lna) lna.textContent = T('note_add');
+  var ni = document.getElementById('note-input'); if(ni) ni.placeholder = T('note_ph');
   document.getElementById('l-save').textContent = T('save');
   document.getElementById('date-display').textContent = formatDisplayDate(currentDate);
   document.getElementById('o-traffic').textContent = T('cat').traffic;
@@ -931,6 +984,44 @@ function renderDonut() {
   });
 
   legend.innerHTML = legendHtml;
+}
+
+// =============================================
+// NOTES
+// =============================================
+function addNote() {
+  var inp = document.getElementById('note-input');
+  var txt = inp ? inp.value.trim() : '';
+  if (!txt) return;
+  if (!data.notes) data.notes = [];
+  data.notes.unshift({ text: txt, date: currentDate, id: Date.now() });
+  inp.value = '';
+  renderNotes();
+  saveAll();
+}
+
+function deleteNote(id) {
+  data.notes = (data.notes || []).filter(function(n){ return n.id !== id; });
+  renderNotes();
+  saveAll();
+}
+
+function renderNotes() {
+  var list = document.getElementById('note-list');
+  if (!list) return;
+  var notes = data.notes || [];
+  if (notes.length === 0) {
+    list.innerHTML = '<div style="font-size:14px;color:var(--text-dim);text-align:center;padding:16px 0;">' + T('no_notes') + '</div>';
+    return;
+  }
+  list.innerHTML = notes.map(function(n, i) {
+    return '<div class="note-item">' +
+      '<span class="note-item-num">' + (i+1) + '.</span>' +
+      '<span class="note-item-text">' + escHtml(n.text) + '</span>' +
+      '<span class="note-item-date">' + (n.date || '') + '</span>' +
+      (isToday ? '<button class="note-del-btn" onclick="deleteNote(' + n.id + ')" title="' + T('note_del') + '">×</button>' : '') +
+    '</div>';
+  }).join('');
 }
 
 function escHtml(s) {
