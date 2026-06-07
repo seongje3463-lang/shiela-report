@@ -208,6 +208,15 @@ function formatDisplayDate(str){var d=new Date(str+'T00:00:00');if(lang==='ko'){
 function changeDate(delta){var d=new Date(currentDate+'T00:00:00');d.setDate(d.getDate()+delta);var newStr=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');var today=getTodayStr();if(newStr>today)return;currentDate=newStr;isToday=(currentDate===today);loadData();}
 function setSyncStatus(state,msg){var bar=document.getElementById('sync-bar');var dot=document.getElementById('sync-dot');var msgEl=document.getElementById('sync-msg');bar.className='sync-bar'+(state==='error'?' error':state==='saving'?' saving':'');dot.className='sync-dot'+(state==='saving'?' pulse':'');msgEl.textContent=msg||T('sync_'+state);}
 
+function autoTranslateAndRender(){
+  var targetLang = lang==='ko'?'ko':'en';
+  if(data.tasks.length===0){render();return;}
+  translateTasks(data.tasks, targetLang, function(translatedTasks){
+    data.tasks = translatedTasks;
+    render();
+  });
+}
+
 function loadData(){
   document.getElementById('date-display').textContent=formatDisplayDate(currentDate);
   setSyncStatus('saving',T('sync_loading'));
@@ -225,7 +234,7 @@ function loadData(){
         data.note=res.record.note||'';
         data.notes=res.record.notes||[];
         setSyncStatus('ok');
-        render();
+        autoTranslateAndRender();
       } else {
         data={checkin:'',checkout:'',tasks:[],expenses:[],note:'',notes:res.allNotes||[]};
         findAndCarryOver(1, res.allNotes||[]);
@@ -256,7 +265,7 @@ function findAndCarryOver(daysAgo, allNotes){
         data.tasks = carried;
         data.notes = allNotes;
         setSyncStatus('ok');
-        render();
+        autoTranslateAndRender();
       } else {
         findAndCarryOver(daysAgo+1, allNotes);
       }
