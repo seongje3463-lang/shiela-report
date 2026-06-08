@@ -207,12 +207,13 @@ function getDateStrOffset(offset){var d=new Date();d.setDate(d.getDate()+offset)
 function formatDisplayDate(str){var d=new Date(str+'T00:00:00');if(lang==='ko'){var days_ko=['일','월','화','수','목','금','토'];return d.getFullYear()+'년 '+(d.getMonth()+1)+'월 '+d.getDate()+'일 ('+days_ko[d.getDay()]+')';}else{var days=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];var months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];return months[d.getMonth()]+' '+d.getDate()+', '+d.getFullYear()+' ('+days[d.getDay()]+'>';}}
 function changeDate(delta){var d=new Date(currentDate+'T00:00:00');d.setDate(d.getDate()+delta);var newStr=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');var today=getTodayStr();if(newStr>today)return;currentDate=newStr;isToday=(currentDate===today);loadData();}
 function setSyncStatus(state,msg){var bar=document.getElementById('sync-bar');var dot=document.getElementById('sync-dot');var msgEl=document.getElementById('sync-msg');bar.className='sync-bar'+(state==='error'?' error':state==='saving'?' saving':'');dot.className='sync-dot'+(state==='saving'?' pulse':'');msgEl.textContent=msg||T('sync_'+state);}
+function isValidTime(val){if(!val)return false;var s=val.toString();if(s.indexOf('1899')!==-1)return false;if(s.indexOf('T')!==-1)return false;if(s.length>8)return false;return true;}
 
 function autoTranslateAndRender(){
-  var targetLang = lang==='ko'?'ko':'en';
+  var targetLang=lang==='ko'?'ko':'en';
   if(data.tasks.length===0){render();return;}
-  translateTasks(data.tasks, targetLang, function(translatedTasks){
-    data.tasks = translatedTasks;
+  translateTasks(data.tasks,targetLang,function(translatedTasks){
+    data.tasks=translatedTasks;
     render();
   });
 }
@@ -227,8 +228,8 @@ function loadData(){
   fetch(url).then(function(r){return r.json();}).then(function(res){
     if(res.status==='ok'){
       if(res.record){
-        data.checkin=res.record.checkin||'';
-        data.checkout=res.record.checkout||'';
+        data.checkin=isValidTime(res.record.checkin)?res.record.checkin:'';
+        data.checkout=isValidTime(res.record.checkout)?res.record.checkout:'';
         data.tasks=res.record.tasks||[];
         data.expenses=res.record.expenses||[];
         data.note=res.record.note||'';
@@ -237,7 +238,7 @@ function loadData(){
         autoTranslateAndRender();
       } else {
         data={checkin:'',checkout:'',tasks:[],expenses:[],note:'',notes:res.allNotes||[]};
-        findAndCarryOver(1, res.allNotes||[]);
+        findAndCarryOver(1,res.allNotes||[]);
       }
     } else {
       setSyncStatus('error');
@@ -249,40 +250,24 @@ function loadData(){
   });
 }
 
-function findAndCarryOver(daysAgo, allNotes){
-  if(daysAgo >= 30){
-    data.notes = allNotes;
-    setSyncStatus('ok');
-    render();
-    return;
-  }
-  var targetDate = getDateStrOffset(-daysAgo);
-  var url = APPS_SCRIPT_URL+'?action=read&date='+targetDate+'&_='+Date.now();
+function findAndCarryOver(daysAgo,allNotes){
+  if(daysAgo>=30){data.notes=allNotes;setSyncStatus('ok');render();return;}
+  var targetDate=getDateStrOffset(-daysAgo);
+  var url=APPS_SCRIPT_URL+'?action=read&date='+targetDate+'&_='+Date.now();
   fetch(url).then(function(r){return r.json();}).then(function(res){
-    if(res.status==='ok' && res.record){
-      var carried = (res.record.tasks||[]).filter(function(t){return !t.done;}).map(function(t){return Object.assign({},t,{carried:true});});
-      if(carried.length > 0){
-        data.tasks = carried;
-        data.notes = allNotes;
-        setSyncStatus('ok');
-        autoTranslateAndRender();
-      } else {
-        findAndCarryOver(daysAgo+1, allNotes);
-      }
+    if(res.status==='ok'&&res.record){
+      var carried=(res.record.tasks||[]).filter(function(t){return !t.done;}).map(function(t){return Object.assign({},t,{carried:true});});
+      if(carried.length>0){data.tasks=carried;data.notes=allNotes;setSyncStatus('ok');autoTranslateAndRender();}
+      else{findAndCarryOver(daysAgo+1,allNotes);}
     } else {
-      findAndCarryOver(daysAgo+1, allNotes);
+      findAndCarryOver(daysAgo+1,allNotes);
     }
-  }).catch(function(){
-    data.notes = allNotes;
-    setSyncStatus('ok');
-    render();
-  });
+  }).catch(function(){data.notes=allNotes;setSyncStatus('ok');render();});
 }
 
 function saveAll(){if(!isToday)return;var noteEl=document.getElementById('note-input');data.note=noteEl?noteEl.value:'';setSyncStatus('saving');var params='?action=write&date='+encodeURIComponent(currentDate)+'&checkin='+encodeURIComponent(data.checkin||'')+'&checkout='+encodeURIComponent(data.checkout||'')+'&tasks='+encodeURIComponent(JSON.stringify(data.tasks||[]))+'&expenses='+encodeURIComponent(JSON.stringify(data.expenses||[]))+'&note='+encodeURIComponent(data.note||'')+'&notes='+encodeURIComponent(JSON.stringify(data.notes||[]))+'&_='+Date.now();fetch(APPS_SCRIPT_URL+params).then(function(r){return r.json();}).then(function(res){if(res.status==='ok'){setSyncStatus('ok');}else{setSyncStatus('error');}}).catch(function(){setSyncStatus('error');});}
 function recordCheckin(){if(data.checkin||!isToday)return;var now=new Date();data.checkin=String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');renderAttendance();saveAll();}
 function recordCheckout(){if(data.checkout||!isToday)return;var now=new Date();data.checkout=String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');renderAttendance();saveAll();}
-function isValidTime(val){if(!val)return false;var s=val.toString();if(s.indexOf('1899')!==-1)return false;if(s.indexOf('T')!==-1)return false;if(s.length>8)return false;return true;}
 function renderAttendance(){var ci=document.getElementById('checkin-display');var co=document.getElementById('checkout-display');var bi=document.getElementById('btn-checkin');var bo=document.getElementById('btn-checkout');if(isValidTime(data.checkin)){ci.textContent=data.checkin;ci.className='att-time';bi.innerHTML='<span id="l-btn-checkin">'+T('already_in')+'</span>';bi.className='att-btn done';bi.disabled=true;}else{ci.textContent='—';ci.className='att-time empty';bi.innerHTML='<span id="l-btn-checkin">'+T('btn_in')+'</span>';bi.className='att-btn checkin';bi.disabled=!isToday;}if(isValidTime(data.checkout)){co.textContent=data.checkout;co.className='att-time';bo.innerHTML='<span id="l-btn-checkout">'+T('already_out')+'</span>';bo.className='att-btn done';bo.disabled=true;}else{co.textContent='—';co.className='att-time empty';bo.innerHTML='<span id="l-btn-checkout">'+T('btn_out')+'</span>';bo.className='att-btn checkout';bo.disabled=!isToday;}}
 function translateText(text,targetLang,callback){var url='https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl='+targetLang+'&dt=t&q='+encodeURIComponent(text);fetch(url).then(function(r){return r.json();}).then(function(res){var translated='';if(res&&res[0]){res[0].forEach(function(item){if(item[0])translated+=item[0];});}callback(translated||text);}).catch(function(){callback(text);});}
 function translateTasks(tasks,targetLang,callback){if(tasks.length===0){callback([]);return;}var translated=tasks.slice();var pending=tasks.length;tasks.forEach(function(t,i){translateText(t.text,targetLang,function(result){translated[i]=Object.assign({},t,{displayText:result});pending--;if(pending===0)callback(translated);});});}
