@@ -145,7 +145,7 @@
   <div class="card">
     <div class="card-label" id="l-tasks">오늘의 업무</div>
     <div class="task-input-row" id="task-input-area">
-      <input class="task-input" id="task-input" type="text" placeholder="업무 내용 입력..." onkeydown="if(event.key==='Enter')addTask()">
+      <input class="task-input" id="task-input" type="text" placeholder="업무 내용 입력..." onkeydown="if(event.key==='Enter'&&!isComposing)addTask()" oncompositionstart="isComposing=true" oncompositionend="isComposing=false">
       <button class="add-btn" onclick="addTask()" id="l-add">+ 추가</button>
     </div>
     <div class="task-list" id="task-list"></div>
@@ -195,6 +195,7 @@
 var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyA4PdNYaEupSfLrfy5JyUZ92n8_wcyFqvELLvltIRbvJBM4oHSQLK1SIm_hIV2HvHOYQ/exec';
 var currentDate = getTodayStr();
 var isToday = true;
+var isComposing = false;
 var lang = 'ko';
 var data = { checkin:'', checkout:'', tasks:[], expenses:[], note:'', notes:[] };
 var TX = {
