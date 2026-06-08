@@ -145,7 +145,7 @@
   <div class="card">
     <div class="card-label" id="l-tasks">오늘의 업무</div>
     <div class="task-input-row" id="task-input-area">
-      <input class="task-input" id="task-input" type="text" placeholder="업무 내용 입력..." onkeydown="if(event.key==='Enter'&&!isComposing)addTask()" oncompositionstart="isComposing=true" oncompositionend="isComposing=false">
+      <input class="task-input" id="task-input" type="text" placeholder="업무 내용 입력...">
       <button class="add-btn" onclick="addTask()" id="l-add">+ 추가</button>
     </div>
     <div class="task-list" id="task-list"></div>
@@ -218,6 +218,7 @@ function recordCheckout(){if(data.checkout||!isToday)return;var now=new Date();d
 function renderAttendance(){var ci=document.getElementById('checkin-display');var co=document.getElementById('checkout-display');var bi=document.getElementById('btn-checkin');var bo=document.getElementById('btn-checkout');if(isValidTime(data.checkin)){ci.textContent=data.checkin;ci.className='att-time';bi.innerHTML='<span id="l-btn-checkin">'+T('already_in')+'</span>';bi.className='att-btn done';bi.disabled=true;}else{ci.textContent='—';ci.className='att-time empty';bi.innerHTML='<span id="l-btn-checkin">'+T('btn_in')+'</span>';bi.className='att-btn checkin';bi.disabled=!isToday;}if(isValidTime(data.checkout)){co.textContent=data.checkout;co.className='att-time';bo.innerHTML='<span id="l-btn-checkout">'+T('already_out')+'</span>';bo.className='att-btn done';bo.disabled=true;}else{co.textContent='—';co.className='att-time empty';bo.innerHTML='<span id="l-btn-checkout">'+T('btn_out')+'</span>';bo.className='att-btn checkout';bo.disabled=!isToday;}}
 function translateText(text,targetLang,callback){var url='https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl='+targetLang+'&dt=t&q='+encodeURIComponent(text);fetch(url).then(function(r){return r.json();}).then(function(res){var translated='';if(res&&res[0]){res[0].forEach(function(item){if(item[0])translated+=item[0];});}callback(translated||text);}).catch(function(){callback(text);});}
 function translateTasks(tasks,targetLang,callback){if(tasks.length===0){callback([]);return;}var translated=tasks.slice();var pending=tasks.length;tasks.forEach(function(t,i){translateText(t.text,targetLang,function(result){translated[i]=Object.assign({},t,{displayText:result});pending--;if(pending===0)callback(translated);});});}
+function initTaskInput(){var inp=document.getElementById('task-input');inp.addEventListener('compositionstart',function(){isComposing=true;});inp.addEventListener('compositionend',function(){isComposing=false;});inp.addEventListener('keydown',function(e){if(e.key==='Enter'&&!isComposing){e.preventDefault();addTask();}});}
 function addTask(){if(!isToday)return;var inp=document.getElementById('task-input');var txt=inp.value.trim();if(!txt)return;data.tasks.push({text:txt,done:false,memo:''});inp.value='';renderTasks();saveAll();}
 function startEdit(i){data.tasks[i].editing=true;renderTasks();var inp=document.getElementById('edit-input-'+i);if(inp){inp.focus();inp.select();}}
 function saveEdit(i){var inp=document.getElementById('edit-input-'+i);if(inp&&inp.value.trim()){data.tasks[i].text=inp.value.trim();data.tasks[i].displayText=inp.value.trim();}data.tasks[i].editing=false;renderTasks();saveAll();}
@@ -240,6 +241,7 @@ function renderNotes(){var list=document.getElementById('note-list');if(!list)re
 function escHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 applyLang();
 loadData();
+initTaskInput();
 </script>
 </body>
 </html>
