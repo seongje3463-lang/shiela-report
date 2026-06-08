@@ -192,7 +192,7 @@
   </div>
 </div>
 <script>
-var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzGtOwzKsKvMYgxFgEtMJFTHXgj9ZJWiSFDgdXZKfMdAtgQN81x7COHizPCDq4StBNT/exec';
+var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz4r2foDXrS6TjnK8euG-U3MHAPLkzpDW9uIchE3PmjCV1S7UXPbyRjvYJyaOQbyKI/exec';
 var currentDate = getTodayStr();
 var isToday = true;
 var lang = 'ko';
@@ -208,63 +208,9 @@ function formatDisplayDate(str){var d=new Date(str+'T00:00:00');if(lang==='ko'){
 function changeDate(delta){var d=new Date(currentDate+'T00:00:00');d.setDate(d.getDate()+delta);var newStr=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');var today=getTodayStr();if(newStr>today)return;currentDate=newStr;isToday=(currentDate===today);loadData();}
 function setSyncStatus(state,msg){var bar=document.getElementById('sync-bar');var dot=document.getElementById('sync-dot');var msgEl=document.getElementById('sync-msg');bar.className='sync-bar'+(state==='error'?' error':state==='saving'?' saving':'');dot.className='sync-dot'+(state==='saving'?' pulse':'');msgEl.textContent=msg||T('sync_'+state);}
 function isValidTime(val){if(!val)return false;var s=val.toString();if(s.indexOf('1899')!==-1)return false;if(s.indexOf('T')!==-1)return false;if(s.length>8)return false;return true;}
-
-function autoTranslateAndRender(){
-  var targetLang=lang==='ko'?'ko':'en';
-  if(data.tasks.length===0){render();return;}
-  translateTasks(data.tasks,targetLang,function(translatedTasks){
-    data.tasks=translatedTasks;
-    render();
-  });
-}
-
-function loadData(){
-  document.getElementById('date-display').textContent=formatDisplayDate(currentDate);
-  setSyncStatus('saving',T('sync_loading'));
-  var rn=document.getElementById('readonly-notice');
-  if(!isToday){rn.style.display='block';document.getElementById('readonly-text').textContent=T('readonly');document.getElementById('save-btn').disabled=true;}
-  else{rn.style.display='none';document.getElementById('save-btn').disabled=false;}
-  var url=APPS_SCRIPT_URL+'?action=read&date='+currentDate+'&_='+Date.now();
-  fetch(url).then(function(r){return r.json();}).then(function(res){
-    if(res.status==='ok'){
-      if(res.record){
-        data.checkin=isValidTime(res.record.checkin)?res.record.checkin:'';
-        data.checkout=isValidTime(res.record.checkout)?res.record.checkout:'';
-        data.tasks=res.record.tasks||[];
-        data.expenses=res.record.expenses||[];
-        data.note=res.record.note||'';
-        data.notes=res.record.notes||[];
-        setSyncStatus('ok');
-        autoTranslateAndRender();
-      } else {
-        data={checkin:'',checkout:'',tasks:[],expenses:[],note:'',notes:res.allNotes||[]};
-        findAndCarryOver(1,res.allNotes||[]);
-      }
-    } else {
-      setSyncStatus('error');
-    }
-  }).catch(function(){
-    setSyncStatus('error');
-    data={checkin:'',checkout:'',tasks:[],expenses:[],note:'',notes:[]};
-    render();
-  });
-}
-
-function findAndCarryOver(daysAgo,allNotes){
-  if(daysAgo>=30){data.notes=allNotes;setSyncStatus('ok');render();return;}
-  var targetDate=getDateStrOffset(-daysAgo);
-  var url=APPS_SCRIPT_URL+'?action=read&date='+targetDate+'&_='+Date.now();
-  fetch(url).then(function(r){return r.json();}).then(function(res){
-    if(res.status==='ok'&&res.record){
-      var carried=(res.record.tasks||[]).filter(function(t){return !t.done;}).map(function(t){return Object.assign({},t,{carried:true});});
-      if(carried.length>0){data.tasks=carried;data.notes=allNotes;setSyncStatus('ok');autoTranslateAndRender();}
-      else{findAndCarryOver(daysAgo+1,allNotes);}
-    } else {
-      findAndCarryOver(daysAgo+1,allNotes);
-    }
-  }).catch(function(){data.notes=allNotes;setSyncStatus('ok');render();});
-}
-
+function autoTranslateAndRender(){var targetLang=lang==='ko'?'ko':'en';if(data.tasks.length===0){render();return;}translateTasks(data.tasks,targetLang,function(translatedTasks){data.tasks=translatedTasks;render();});}
+function loadData(){document.getElementById('date-display').textContent=formatDisplayDate(currentDate);setSyncStatus('saving',T('sync_loading'));var rn=document.getElementById('readonly-notice');if(!isToday){rn.style.display='block';document.getElementById('readonly-text').textContent=T('readonly');document.getElementById('save-btn').disabled=true;}else{rn.style.display='none';document.getElementById('save-btn').disabled=false;}var url=APPS_SCRIPT_URL+'?action=read&date='+currentDate+'&_='+Date.now();fetch(url).then(function(r){return r.json();}).then(function(res){if(res.status==='ok'){if(res.record){data.checkin=isValidTime(res.record.checkin)?res.record.checkin:'';data.checkout=isValidTime(res.record.checkout)?res.record.checkout:'';data.tasks=res.record.tasks||[];data.expenses=res.record.expenses||[];data.note=res.record.note||'';data.notes=res.record.notes||[];setSyncStatus('ok');autoTranslateAndRender();}else{data={checkin:'',checkout:'',tasks:[],expenses:[],note:'',notes:res.allNotes||[]};findAndCarryOver(1,res.allNotes||[]);}}else{setSyncStatus('error');}}).catch(function(){setSyncStatus('error');data={checkin:'',checkout:'',tasks:[],expenses:[],note:'',notes:[]};render();});}
+function findAndCarryOver(daysAgo,allNotes){if(daysAgo>=30){data.notes=allNotes;setSyncStatus('ok');render();return;}var targetDate=getDateStrOffset(-daysAgo);var url=APPS_SCRIPT_URL+'?action=read&date='+targetDate+'&_='+Date.now();fetch(url).then(function(r){return r.json();}).then(function(res){if(res.status==='ok'&&res.record){var carried=(res.record.tasks||[]).filter(function(t){return !t.done;}).map(function(t){return Object.assign({},t,{carried:true});});if(carried.length>0){data.tasks=carried;data.notes=allNotes;setSyncStatus('ok');autoTranslateAndRender();}else{findAndCarryOver(daysAgo+1,allNotes);}}else{findAndCarryOver(daysAgo+1,allNotes);}}).catch(function(){data.notes=allNotes;setSyncStatus('ok');render();});}
 function saveAll(){if(!isToday)return;var noteEl=document.getElementById('note-input');data.note=noteEl?noteEl.value:'';setSyncStatus('saving');var params='?action=write&date='+encodeURIComponent(currentDate)+'&checkin='+encodeURIComponent(data.checkin||'')+'&checkout='+encodeURIComponent(data.checkout||'')+'&tasks='+encodeURIComponent(JSON.stringify(data.tasks||[]))+'&expenses='+encodeURIComponent(JSON.stringify(data.expenses||[]))+'&note='+encodeURIComponent(data.note||'')+'&notes='+encodeURIComponent(JSON.stringify(data.notes||[]))+'&_='+Date.now();fetch(APPS_SCRIPT_URL+params).then(function(r){return r.json();}).then(function(res){if(res.status==='ok'){setSyncStatus('ok');}else{setSyncStatus('error');}}).catch(function(){setSyncStatus('error');});}
 function recordCheckin(){if(data.checkin||!isToday)return;var now=new Date();data.checkin=String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');renderAttendance();saveAll();}
 function recordCheckout(){if(data.checkout||!isToday)return;var now=new Date();data.checkout=String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');renderAttendance();saveAll();}
@@ -276,7 +222,7 @@ function startEdit(i){data.tasks[i].editing=true;renderTasks();var inp=document.
 function saveEdit(i){var inp=document.getElementById('edit-input-'+i);if(inp&&inp.value.trim()){data.tasks[i].text=inp.value.trim();data.tasks[i].displayText=inp.value.trim();}data.tasks[i].editing=false;renderTasks();saveAll();}
 function completeTask(i){if(!isToday)return;data.tasks[i].done=true;renderTasks();saveAll();}
 function updateMemo(i,val){data.tasks[i].memo=val;}
-function renderTasks(){var list=document.getElementById('task-list');if(data.tasks.length===0){list.innerHTML='<div class="no-tasks">'+T('no_tasks')+'</div>';return;}list.innerHTML=data.tasks.map(function(t,i){var isDone=t.done;var isCarried=t.carried&&!isDone;var displayText=t.displayText||t.text;var isEditing=t.editing;return'<div class="task-item'+(isDone?' done-item':isCarried?' carried-item':'')+'"><div class="task-main"><span class="task-num">'+(i+1)+'.</span>'+(isEditing?'<input class="edit-input" id="edit-input-'+i+'" value="'+escHtml(t.text)+'" onkeydown="if(event.keyCode===13)saveEdit('+i+')">':'<span class="task-text'+(isDone?' done-text':'')+'">'+escHtml(displayText)+'</span>')+(isCarried?'<span class="carried-badge">'+T('carried')+'</span>':'')+(isDone?'<span class="complete-btn done-btn">'+T('done')+'</span>':(isToday?(isEditing?'<button class="complete-btn" onclick="saveEdit('+i+')">'+T('save_edit')+'</button>':'<button class="complete-btn" onclick="completeTask('+i+')">'+T('done')+'</button><button class="edit-btn" onclick="startEdit('+i+')">'+T('edit')+'</button>'):'<span class="complete-btn done-btn">'+T('pending')+'</span>'))+'</div>'+(!isDone&&!isEditing?'<div class="task-memo"><textarea class="task-memo-input" rows="1" placeholder="'+T('memo_ph')+'" onchange="updateMemo('+i+',this.value)" onblur="updateMemo('+i+',this.value);if(isToday)saveAll()">'+escHtml(t.memo||'')+'</textarea></div>':'')+'</div>';}).join('');}
+function renderTasks(){var list=document.getElementById('task-list');if(data.tasks.length===0){list.innerHTML='<div class="no-tasks">'+T('no_tasks')+'</div>';return;}list.innerHTML=data.tasks.map(function(t,i){var isDone=t.done;var isCarried=t.carried&&!isDone;var displayText=t.displayText||t.text;var isEditing=t.editing;return'<div class="task-item'+(isDone?' done-item':isCarried?' carried-item':'')+'">'+'<div class="task-main"><span class="task-num">'+(i+1)+'.</span>'+(isEditing?'<input class="edit-input" id="edit-input-'+i+'" value="'+escHtml(t.text)+'" onkeydown="if(event.keyCode===13)saveEdit('+i+')">':'<span class="task-text'+(isDone?' done-text':'')+'">'+escHtml(displayText)+'</span>')+(isCarried?'<span class="carried-badge">'+T('carried')+'</span>':'')+(isDone?'<span class="complete-btn done-btn">'+T('done')+'</span>':(isToday?(isEditing?'<button class="complete-btn" onclick="saveEdit('+i+')">'+T('save_edit')+'</button>':'<button class="complete-btn" onclick="completeTask('+i+')">'+T('done')+'</button><button class="edit-btn" onclick="startEdit('+i+')">'+T('edit')+'</button>'):'<span class="complete-btn done-btn">'+T('pending')+'</span>'))+'</div>'+(!isDone&&!isEditing?'<div class="task-memo"><textarea class="task-memo-input" rows="1" placeholder="'+T('memo_ph')+'" onchange="updateMemo('+i+',this.value)" onblur="updateMemo('+i+',this.value);if(isToday)saveAll()">'+escHtml(t.memo||'')+'</textarea></div>':'')+'</div>';}).join('');}
 function addExpense(){if(!isToday)return;var cat=document.getElementById('exp-cat').value;var name=document.getElementById('exp-name').value.trim();var amt=parseFloat(document.getElementById('exp-amount').value);if(!name||isNaN(amt)||amt<=0)return;data.expenses.push({cat:cat,name:name,amount:amt});document.getElementById('exp-name').value='';document.getElementById('exp-amount').value='';renderExpenses();renderDonut();saveAll();}
 function deleteExpense(i){if(!isToday)return;data.expenses.splice(i,1);renderExpenses();saveAll();}
 function renderExpenses(){var list=document.getElementById('exp-list');var total=document.getElementById('exp-total');if(data.expenses.length===0){list.innerHTML='<div class="no-exp">'+T('no_exp')+'</div>';total.style.display='none';return;}var sum=0;list.innerHTML=data.expenses.map(function(e,i){sum+=e.amount;return'<div class="exp-row"><span class="exp-cat">'+(T('cat')[e.cat]||e.cat)+'</span><span class="exp-name">'+escHtml(e.name)+'</span><span class="exp-amount">AED '+e.amount.toFixed(2)+'</span>'+(isToday?'<button class="exp-del" onclick="deleteExpense('+i+')" title="Delete">×</button>':'')+'</div>';}).join('');total.style.display='flex';total.textContent=T('total')+': AED '+sum.toFixed(2);}
