@@ -331,6 +331,20 @@ function deleteSchedule(id){
   renderSchedules();
   saveAll();
 }
+function translateSchedules(schedules,targetLang,callback){
+  if(schedules.length===0){callback([]);return;}
+  var translated=schedules.slice();
+  var pending=schedules.length;
+  schedules.forEach(function(s,i){
+    var textToTranslate=s.title+(s.sub?'\n'+s.sub:'');
+    translateText(textToTranslate,targetLang,function(result){
+      var lines=result.split('\n');
+      translated[i]=Object.assign({},s,{displayTitle:lines[0]||s.title,displaySub:lines[1]||s.sub||''});
+      pending--;
+      if(pending===0)callback(translated);
+    });
+  });
+}
 function renderSchedules(){
   var list=document.getElementById('sched-list');
   var today=getTodayStr();
@@ -338,23 +352,27 @@ function renderSchedules(){
   data.schedules=(data.schedules||[]).filter(function(s){return s.date>=threeDaysAgo;});
   var schedules=data.schedules;
   if(schedules.length===0){list.innerHTML='<div class="no-sched">'+T('no_sched')+'</div>';return;}
-  list.innerHTML=schedules.map(function(s){
-    var d=new Date(s.date+'T00:00:00');
-    var months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-    var day=d.getDate();
-    var mon=months[d.getMonth()];
-    var isPast=s.date<today;
-    var isUrgent=!isPast&&s.date<=getDateStrOffset(7);
-    var dayColor=isUrgent?'var(--danger)':'var(--text)';
-    var monColor=isUrgent?'var(--danger)':'var(--text-sub)';
-    var catLabel=T('sched_cat')[s.cat]||s.cat;
-    return '<div class="sched-item">'
-      +'<div class="sched-date"><div class="sched-day" style="color:'+dayColor+'">'+day+'</div><div class="sched-mon" style="color:'+monColor+'">'+mon+'</div></div>'
-      +'<div class="sched-content"><p class="sched-title">'+escHtml(s.title)+'</p>'+(s.sub?'<p class="sched-sub">'+escHtml(s.sub)+'</p>':'')+'</div>'
-      +'<span class="sched-badge '+s.cat+'">'+catLabel+'</span>'
-      +'<button class="sched-del" onclick="deleteSchedule('+s.id+')">×</button>'
-      +'</div>';
-  }).join('');
+  var targetLang=lang==='ko'?'ko':'en';
+  translateSchedules(schedules,targetLang,function(translated){
+    list.innerHTML=translated.map(function(s){
+      var d=new Date(s.date+'T00:00:00');
+      var months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      var day=d.getDate();
+      var mon=months[d.getMonth()];
+      var isUrgent=s.date>today&&s.date<=getDateStrOffset(7);
+      var dayColor=isUrgent?'var(--danger)':'var(--text)';
+      var monColor=isUrgent?'var(--danger)':'var(--text-sub)';
+      var catLabel=T('sched_cat')[s.cat]||s.cat;
+      var displayTitle=s.displayTitle||s.title;
+      var displaySub=s.displaySub||s.sub||'';
+      return '<div class="sched-item">'
+        +'<div class="sched-date"><div class="sched-day" style="color:'+dayColor+'">'+day+'</div><div class="sched-mon" style="color:'+monColor+'">'+mon+'</div></div>'
+        +'<div class="sched-content"><p class="sched-title">'+escHtml(displayTitle)+'</p>'+(displaySub?'<p class="sched-sub">'+escHtml(displaySub)+'</p>':'')+'</div>'
+        +'<span class="sched-badge '+s.cat+'">'+catLabel+'</span>'
+        +'<button class="sched-del" onclick="deleteSchedule('+s.id+')">×</button>'
+        +'</div>';
+    }).join('');
+  });
 }
 function translateText(text,targetLang,callback){var url='https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl='+targetLang+'&dt=t&q='+encodeURIComponent(text);fetch(url).then(function(r){return r.json();}).then(function(res){var translated='';if(res&&res[0]){res[0].forEach(function(item){if(item[0])translated+=item[0];});}callback(translated||text);}).catch(function(){callback(text);});}
 function translateTasks(tasks,targetLang,callback){if(tasks.length===0){callback([]);return;}var translated=tasks.slice();var pending=tasks.length;tasks.forEach(function(t,i){translateText(t.text,targetLang,function(result){translated[i]=Object.assign({},t,{displayText:result});pending--;if(pending===0)callback(translated);});});}
