@@ -100,7 +100,6 @@
   .save-btn:hover { background: #255c43; }
   .save-btn:disabled { background: var(--text-dim); cursor: not-allowed; }
   .readonly-notice { background: var(--warn-light); color: var(--warn); border: 1px solid #f5ddb0; border-radius: 8px; padding: 10px 14px; font-size: 13px; margin-bottom: 16px; display: none; }
-  /* 주요 일정 스타일 */
   .sched-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
   .sched-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--bg); border-radius: 8px; }
   .sched-date { text-align: center; min-width: 36px; flex-shrink: 0; }
@@ -124,7 +123,6 @@
   .sched-add-btn { width: 100%; padding: 9px; border-radius: 7px; border: none; background: var(--accent); color: #fff; font-size: 13px; font-weight: 500; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: background 0.15s; }
   .sched-add-btn:hover { background: #255c43; }
   .no-sched { font-size: 14px; color: var(--text-dim); text-align: center; padding: 16px 0; }
-  /* 하단 2열 그리드 */
   .bottom-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 0; }
   .bottom-grid .card { margin-bottom: 0; }
   @media(max-width: 520px) { .bottom-grid { grid-template-columns: 1fr; } }
@@ -156,7 +154,6 @@
   </div>
   <div class="readonly-notice" id="readonly-notice">📅 <span id="readonly-text">과거 날짜입니다. 수정 후 저장이 불가합니다.</span></div>
 
-  <!-- 출퇴근 -->
   <div class="card">
     <div class="card-label" id="l-att">출퇴근 기록</div>
     <div class="att-grid">
@@ -173,7 +170,6 @@
     </div>
   </div>
 
-  <!-- 업무 -->
   <div class="card">
     <div class="card-label" id="l-tasks">오늘의 업무</div>
     <div class="task-input-row" id="task-input-area">
@@ -183,7 +179,6 @@
     <div class="task-list" id="task-list"></div>
   </div>
 
-  <!-- 주요 일정 -->
   <div class="card">
     <div class="card-label" id="l-sched">📅 주요 일정</div>
     <div class="sched-list" id="sched-list"></div>
@@ -205,7 +200,6 @@
     </div>
   </div>
 
-  <!-- 지출 + 특이사항 2열 -->
   <div class="bottom-grid">
     <div class="card">
       <div class="card-label" id="l-expense">지출 내역</div>
@@ -288,23 +282,20 @@ function loadData(){
         data.expenses=res.record.expenses||[];
         data.note=res.record.note||'';
         data.notes=res.record.notes||[];
-        data.schedules=res.record.schedules||loadLocalSchedules();
+        data.schedules=res.record.schedules||[];
         setSyncStatus('ok');autoTranslateAndRender();
       } else {
-        data={checkin:'',checkout:'',tasks:[],expenses:[],note:'',notes:res.allNotes||[],schedules:loadLocalSchedules()};
+        data={checkin:'',checkout:'',tasks:[],expenses:[],note:'',notes:res.allNotes||[],schedules:res.allSchedules||[]};
         findAndCarryOver(1,res.allNotes||[]);
       }
     }else{setSyncStatus('error');}
-  }).catch(function(){setSyncStatus('error');data={checkin:'',checkout:'',tasks:[],expenses:[],note:'',notes:[],schedules:loadLocalSchedules()};render();});
+  }).catch(function(){setSyncStatus('error');data={checkin:'',checkout:'',tasks:[],expenses:[],note:'',notes:[],schedules:[]};render();});
 }
-function loadLocalSchedules(){try{var s=localStorage.getItem('choco_schedules');return s?JSON.parse(s):[];}catch(e){return[];}}
-function saveLocalSchedules(){try{localStorage.setItem('choco_schedules',JSON.stringify(data.schedules||[]));}catch(e){}}
 function findAndCarryOver(daysAgo,allNotes){if(daysAgo>=30){data.notes=allNotes;setSyncStatus('ok');render();return;}var targetDate=getDateStrOffset(-daysAgo);var url=APPS_SCRIPT_URL+'?action=read&date='+targetDate+'&_='+Date.now();fetch(url).then(function(r){return r.json();}).then(function(res){if(res.status==='ok'&&res.record){var carried=(res.record.tasks||[]).filter(function(t){return !t.done;}).map(function(t){return Object.assign({},t,{carried:true});});if(carried.length>0){data.tasks=carried;data.notes=allNotes;setSyncStatus('ok');autoTranslateAndRender();}else{findAndCarryOver(daysAgo+1,allNotes);}}else{findAndCarryOver(daysAgo+1,allNotes);}}).catch(function(){data.notes=allNotes;setSyncStatus('ok');render();});}
 function saveAll(){
   if(!isToday)return;
   var noteEl=document.getElementById('note-input');data.note=noteEl?noteEl.value:'';
   setSyncStatus('saving');
-  saveLocalSchedules();
   var params='?action=write&date='+encodeURIComponent(currentDate)+'&checkin='+encodeURIComponent(data.checkin||'')+'&checkout='+encodeURIComponent(data.checkout||'')+'&tasks='+encodeURIComponent(JSON.stringify(data.tasks||[]))+'&expenses='+encodeURIComponent(JSON.stringify(data.expenses||[]))+'&note='+encodeURIComponent(data.note||'')+'&notes='+encodeURIComponent(JSON.stringify(data.notes||[]))+'&schedules='+encodeURIComponent(JSON.stringify(data.schedules||[]))+'&_='+Date.now();
   fetch(APPS_SCRIPT_URL+params).then(function(r){return r.json();}).then(function(res){if(res.status==='ok'){setSyncStatus('ok');}else{setSyncStatus('error');}}).catch(function(){setSyncStatus('error');});
 }
@@ -333,20 +324,20 @@ function addSchedule(){
   document.getElementById('sched-title-input').value='';
   document.getElementById('sched-sub-input').value='';
   renderSchedules();
-  saveLocalSchedules();
   saveAll();
 }
 function deleteSchedule(id){
   data.schedules=(data.schedules||[]).filter(function(s){return s.id!==id;});
   renderSchedules();
-  saveLocalSchedules();
   saveAll();
 }
 function renderSchedules(){
   var list=document.getElementById('sched-list');
-  var schedules=data.schedules||[];
-  if(schedules.length===0){list.innerHTML='<div class="no-sched">'+T('no_sched')+'</div>';return;}
   var today=getTodayStr();
+  var threeDaysAgo=getDateStrOffset(-3);
+  data.schedules=(data.schedules||[]).filter(function(s){return s.date>=threeDaysAgo;});
+  var schedules=data.schedules;
+  if(schedules.length===0){list.innerHTML='<div class="no-sched">'+T('no_sched')+'</div>';return;}
   list.innerHTML=schedules.map(function(s){
     var d=new Date(s.date+'T00:00:00');
     var months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -354,10 +345,10 @@ function renderSchedules(){
     var mon=months[d.getMonth()];
     var isPast=s.date<today;
     var isUrgent=!isPast&&s.date<=getDateStrOffset(7);
-    var dayColor=isPast?'var(--text-dim)':(isUrgent?'var(--danger)':'var(--text)');
-    var monColor=isPast?'var(--text-dim)':(isUrgent?'var(--danger)':'var(--text-sub)');
+    var dayColor=isUrgent?'var(--danger)':'var(--text)';
+    var monColor=isUrgent?'var(--danger)':'var(--text-sub)';
     var catLabel=T('sched_cat')[s.cat]||s.cat;
-    return '<div class="sched-item" style="'+(isPast?'opacity:0.5':'')+';">'
+    return '<div class="sched-item">'
       +'<div class="sched-date"><div class="sched-day" style="color:'+dayColor+'">'+day+'</div><div class="sched-mon" style="color:'+monColor+'">'+mon+'</div></div>'
       +'<div class="sched-content"><p class="sched-title">'+escHtml(s.title)+'</p>'+(s.sub?'<p class="sched-sub">'+escHtml(s.sub)+'</p>':'')+'</div>'
       +'<span class="sched-badge '+s.cat+'">'+catLabel+'</span>'
