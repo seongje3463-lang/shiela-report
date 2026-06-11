@@ -86,14 +86,27 @@
   .exp-del:hover { color: var(--danger); }
   .exp-total { display: flex; justify-content: flex-end; font-size: 13px; font-weight: 600; padding-top: 8px; border-top: 1px solid var(--border); color: var(--accent); }
   .no-exp { font-size: 14px; color: var(--text-dim); text-align: center; padding: 16px 0; }
+  .exp-summary-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 16px; }
+  .exp-summary-box { background: var(--bg); border-radius: 8px; padding: 10px; text-align: center; }
+  .exp-summary-label { font-size: 11px; color: var(--text-sub); margin-bottom: 4px; }
+  .exp-summary-val { font-size: 18px; font-weight: 500; font-family: 'DM Mono', monospace; color: var(--text); }
+  .exp-summary-unit { font-size: 10px; color: var(--text-dim); margin-top: 2px; }
+  .exp-cat-row { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--border); cursor: pointer; }
+  .exp-cat-row:last-of-type { border-bottom: none; }
+  .exp-cat-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .exp-cat-name { flex: 1; font-size: 13px; }
+  .exp-cat-amt { font-size: 13px; font-weight: 500; font-family: 'DM Mono', monospace; }
+  .exp-cat-chevron { font-size: 12px; color: var(--text-dim); transition: transform 0.2s; margin-left: 4px; }
+  .exp-cat-chevron.open { transform: rotate(90deg); }
+  .exp-cat-detail { display: none; padding: 4px 0 6px 16px; }
+  .exp-cat-detail.open { display: block; }
+  .exp-detail-item { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-sub); padding: 3px 0; }
   .note-item { display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; border-radius: 8px; background: var(--bg); font-size: 13px; margin-bottom: 6px; }
   .note-item-num { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--text-dim); min-width: 20px; margin-top: 1px; }
   .note-item-date { font-size: 11px; color: var(--text-dim); white-space: nowrap; margin-top: 1px; }
   .note-item-text { flex: 1; line-height: 1.5; }
   .note-del-btn { background: none; border: none; cursor: pointer; color: var(--text-dim); font-size: 14px; padding: 2px 4px; border-radius: 4px; transition: color 0.15s; flex-shrink: 0; }
   .note-del-btn:hover { color: var(--danger); }
-  .chart-tab { width:44px; font-family:'DM Sans',sans-serif; font-size:11px; font-weight:500; padding:5px 0; border-radius:6px; border:1px solid var(--border); background:transparent; color:var(--text-sub); cursor:pointer; transition:all 0.15s; text-align:center; }
-  .chart-tab.active { background:var(--text); color:#fff; border-color:var(--text); }
   .note-area { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border); font-family: 'DM Sans', sans-serif; font-size: 14px; line-height: 1.6; background: var(--bg); min-height: 90px; resize: vertical; outline: none; transition: border 0.15s; }
   .note-area:focus { border-color: var(--accent); background: #fff; }
   .save-btn { width: 100%; margin-top: 12px; padding: 12px; border-radius: 8px; border: none; background: var(--accent); color: #fff; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.15s; }
@@ -216,20 +229,30 @@
       </div>
       <div class="exp-list" id="exp-list"></div>
       <div class="exp-total" id="exp-total" style="display:none"></div>
-      <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);display:flex;align-items:center;gap:24px;">
-        <div>
-          <div style="display:flex;gap:4px;margin-bottom:10px;">
-            <button class="chart-tab active" onclick="setChartTab('today',this)" id="tab-today">오늘</button>
-            <button class="chart-tab" onclick="setChartTab('week',this)" id="tab-week">주간</button>
-            <button class="chart-tab" onclick="setChartTab('month',this)" id="tab-month">월간</button>
-          </div>
-          <svg id="donut-svg" width="110" height="110" viewBox="0 0 120 120">
-            <circle cx="60" cy="60" r="45" fill="none" stroke="#e4e2db" stroke-width="18"/>
-            <text x="60" y="56" text-anchor="middle" font-size="9" fill="#a8a8a0" id="donut-label">합계</text>
-            <text x="60" y="70" text-anchor="middle" font-size="13" font-weight="600" fill="#1a1a18" id="donut-total">0</text>
-          </svg>
+      <div class="exp-summary-grid">
+        <div class="exp-summary-box">
+          <div class="exp-summary-label" id="l-exp-today">오늘</div>
+          <div class="exp-summary-val" id="exp-today-val">0</div>
+          <div class="exp-summary-unit">AED</div>
         </div>
-        <div id="donut-legend" style="display:flex;flex-direction:column;gap:6px;"></div>
+        <div class="exp-summary-box">
+          <div class="exp-summary-label" id="l-exp-week">이번주</div>
+          <div class="exp-summary-val" id="exp-week-val">0</div>
+          <div class="exp-summary-unit">AED</div>
+        </div>
+        <div class="exp-summary-box">
+          <div class="exp-summary-label" id="l-exp-month">이번달</div>
+          <div class="exp-summary-val" id="exp-month-val">0</div>
+          <div class="exp-summary-unit">AED</div>
+        </div>
+      </div>
+      <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);display:flex;align-items:flex-start;gap:20px;">
+        <svg id="donut-svg" width="110" height="110" viewBox="0 0 120 120" style="flex-shrink:0;">
+          <circle cx="60" cy="60" r="45" fill="none" stroke="#e4e2db" stroke-width="18"/>
+          <text x="60" y="56" text-anchor="middle" font-size="9" fill="#a8a8a0" id="donut-label">이번달</text>
+          <text x="60" y="70" text-anchor="middle" font-size="13" font-weight="600" fill="#1a1a18" id="donut-total">0</text>
+        </svg>
+        <div id="donut-legend" style="flex:1;"></div>
       </div>
     </div>
 
@@ -247,21 +270,25 @@
 </div>
 <script>
 var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyA4PdNYaEupSfLrfy5JyUZ92n8_wcyFqvELLvltIRbvJBM4oHSQLK1SIm_hIV2HvHOYQ/exec';
-var currentDate = getTodayStr();
+var currentDate = getDubaiDateStr(new Date());
 var isToday = true;
 var isComposing = false;
 var lang = 'ko';
 var data = { checkin:'', checkout:'', tasks:[], expenses:[], note:'', notes:[], schedules:[] };
+var allRows = [];
 
 var TX = {
-  en: { title:'Shiela — Daily Report', att:'ATTENDANCE', checkin:'Check-in time', checkout:'Check-out time', btn_in:'Clock In', btn_out:'Clock Out', already_in:'Already recorded', already_out:'Already recorded', tasks:"TODAY'S WORK", task_ph:'Add a task...', add:'+ Add', done:'Complete', pending:'Pending', edit:'Edit', save_edit:'Save', memo_ph:'Reason / note...', carried:'Carried over', expense:'EXPENSE DETAILS', item:'Item name', aed:'AED', cat:{traffic:'Traffic',office:'Office',food:'Food',other:'Other'}, total:'Total', note:'SPECIAL NOTES', note_ph:'Any special notes for today...', save:'Save', no_tasks:'No tasks registered.', no_exp:'No expense records.', tab_today:'Today', tab_week:'Week', tab_month:'Month', sync_ok:'Synced with Google Sheets', sync_saving:'Saving...', sync_err:'Connection error.', sync_loading:'Loading data...', readonly:'This is a past record. Changes cannot be saved.', note_add:'+ Add', note_del:'Delete', no_notes:'No notes yet.', sched:'SCHEDULE', sched_add_title:'Add new schedule', sched_add_btn:'Add Schedule', sched_cat:{legal:'Legal',work:'Work',other:'Other'}, no_sched:'No schedules yet.', sched_year:'Year', sched_month:'Month', sched_day:'Day', sched_months:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'] },
-  ko: { title:'실라 — 업무 보고', att:'출퇴근 기록', checkin:'출근 시간', checkout:'퇴근 시간', btn_in:'출근 기록', btn_out:'퇴근 기록', already_in:'이미 기록됨', already_out:'이미 기록됨', tasks:'오늘의 업무', task_ph:'업무 내용 입력...', add:'+ 추가', done:'완료', pending:'진행중', edit:'수정', save_edit:'저장', memo_ph:'사유 / 메모...', carried:'이월됨', expense:'지출 내역', item:'항목명', aed:'AED', cat:{traffic:'교통',office:'사무',food:'식비',other:'기타'}, total:'합계', note:'특이사항', note_ph:'오늘의 특이사항을 입력하세요...', save:'저장', no_tasks:'등록된 업무가 없습니다.', no_exp:'지출 내역이 없습니다.', tab_today:'오늘', tab_week:'주간', tab_month:'월간', sync_ok:'구글 시트와 동기화됨', sync_saving:'저장 중...', sync_err:'연결 오류.', sync_loading:'데이터 불러오는 중...', readonly:'과거 날짜입니다. 수정 후 저장이 불가합니다.', note_add:'+ 추가', note_del:'삭제', no_notes:'특이사항이 없습니다.', sched:'📅 주요 일정', sched_add_title:'새 일정 추가', sched_add_btn:'일정 추가', sched_cat:{legal:'법률',work:'업무',other:'기타'}, no_sched:'등록된 일정이 없습니다.', sched_year:'년', sched_month:'월', sched_day:'일', sched_months:['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'] }
+  en: { title:'Shiela — Daily Report', att:'ATTENDANCE', checkin:'Check-in time', checkout:'Check-out time', btn_in:'Clock In', btn_out:'Clock Out', already_in:'Already recorded', already_out:'Already recorded', tasks:"TODAY'S WORK", task_ph:'Add a task...', add:'+ Add', done:'Complete', pending:'Pending', edit:'Edit', save_edit:'Save', memo_ph:'Reason / note...', carried:'Carried over', expense:'EXPENSE DETAILS', item:'Item name', aed:'AED', cat:{traffic:'Traffic',office:'Office',food:'Food',other:'Other'}, total:'Total', note:'SPECIAL NOTES', note_ph:'Any special notes for today...', save:'Save', no_tasks:'No tasks registered.', no_exp:'No expense records.', no_notes:'No notes yet.', sched:'SCHEDULE', sched_add_title:'Add new schedule', sched_add_btn:'Add Schedule', sched_cat:{legal:'Legal',work:'Work',other:'Other'}, no_sched:'No schedules yet.', sched_year:'Year', sched_month:'Month', sched_day:'Day', sched_months:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'], sync_ok:'Synced with Google Sheets', sync_saving:'Saving...', sync_err:'Connection error.', sync_loading:'Loading data...', readonly:'This is a past record. Changes cannot be saved.', note_add:'+ Add', note_del:'Delete', exp_today:'Today', exp_week:'This Week', exp_month:'This Month' },
+  ko: { title:'실라 — 업무 보고', att:'출퇴근 기록', checkin:'출근 시간', checkout:'퇴근 시간', btn_in:'출근 기록', btn_out:'퇴근 기록', already_in:'이미 기록됨', already_out:'이미 기록됨', tasks:'오늘의 업무', task_ph:'업무 내용 입력...', add:'+ 추가', done:'완료', pending:'진행중', edit:'수정', save_edit:'저장', memo_ph:'사유 / 메모...', carried:'이월됨', expense:'지출 내역', item:'항목명', aed:'AED', cat:{traffic:'교통',office:'사무',food:'식비',other:'기타'}, total:'합계', note:'특이사항', note_ph:'오늘의 특이사항을 입력하세요...', save:'저장', no_tasks:'등록된 업무가 없습니다.', no_exp:'지출 내역이 없습니다.', no_notes:'특이사항이 없습니다.', sched:'📅 주요 일정', sched_add_title:'새 일정 추가', sched_add_btn:'일정 추가', sched_cat:{legal:'법률',work:'업무',other:'기타'}, no_sched:'등록된 일정이 없습니다.', sched_year:'년', sched_month:'월', sched_day:'일', sched_months:['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'], sync_ok:'구글 시트와 동기화됨', sync_saving:'저장 중...', sync_err:'연결 오류.', sync_loading:'데이터 불러오는 중...', readonly:'과거 날짜입니다. 수정 후 저장이 불가합니다.', note_add:'+ 추가', note_del:'삭제', exp_today:'오늘', exp_week:'이번주', exp_month:'이번달' }
 };
 function T(k){return TX[lang][k]||k;}
-function getTodayStr(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
-function getDateStrOffset(offset){var d=new Date();d.setDate(d.getDate()+offset);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
-function formatDisplayDate(str){var d=new Date(str+'T00:00:00');if(lang==='ko'){var days_ko=['일','월','화','수','목','금','토'];return d.getFullYear()+'년 '+(d.getMonth()+1)+'월 '+d.getDate()+'일 ('+days_ko[d.getDay()]+')';}else{var days=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];var months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];return months[d.getMonth()]+' '+d.getDate()+', '+d.getFullYear()+' ('+days[d.getDay()]+'>';}}
-function changeDate(delta){var d=new Date(currentDate+'T00:00:00');d.setDate(d.getDate()+delta);var newStr=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');var today=getTodayStr();if(newStr>today)return;currentDate=newStr;isToday=(currentDate===today);loadData();}
+function getDubaiDateStr(d){var utc=d.getTime()+(d.getTimezoneOffset()*60000);var dubai=new Date(utc+(4*3600000));return dubai.getFullYear()+'-'+String(dubai.getMonth()+1).padStart(2,'0')+'-'+String(dubai.getDate()).padStart(2,'0');}
+function getTodayStr(){return getDubaiDateStr(new Date());}
+function getDateStrOffset(offset){var d=new Date();d.setDate(d.getDate()+offset);return getDubaiDateStr(d);}
+function getThisWeekMonday(){var now=new Date();var utc=now.getTime()+(now.getTimezoneOffset()*60000);var dubai=new Date(utc+(4*3600000));var day=dubai.getDay();var diff=day===0?-6:1-day;dubai.setDate(dubai.getDate()+diff);return dubai.getFullYear()+'-'+String(dubai.getMonth()+1).padStart(2,'0')+'-'+String(dubai.getDate()).padStart(2,'0');}
+function getThisMonthStart(){var now=new Date();var utc=now.getTime()+(now.getTimezoneOffset()*60000);var dubai=new Date(utc+(4*3600000));return dubai.getFullYear()+'-'+String(dubai.getMonth()+1).padStart(2,'0')+'-01';}
+function formatDisplayDate(str){var d=new Date(str+'T00:00:00');if(lang==='ko'){var days_ko=['일','월','화','수','목','금','토'];return d.getFullYear()+'년 '+(d.getMonth()+1)+'월 '+d.getDate()+'일 ('+days_ko[d.getDay()]+')';}else{var days=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];var months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];return months[d.getMonth()]+' '+d.getDate()+', '+d.getFullYear()+' ('+days[d.getDay()]+')';}}
+function changeDate(delta){var d=new Date(currentDate+'T00:00:00');d.setDate(d.getDate()+delta);var newStr=getDubaiDateStr(d);var today=getTodayStr();if(newStr>today)return;currentDate=newStr;isToday=(currentDate===today);loadData();}
 function setSyncStatus(state,msg){var bar=document.getElementById('sync-bar');var dot=document.getElementById('sync-dot');var msgEl=document.getElementById('sync-msg');bar.className='sync-bar'+(state==='error'?' error':state==='saving'?' saving':'');dot.className='sync-dot'+(state==='saving'?' pulse':'');msgEl.textContent=msg||T('sync_'+state);}
 function isValidTime(val){if(!val)return false;var s=val.toString();if(s.indexOf('1899')!==-1)return false;if(s.indexOf('T')!==-1)return false;if(s.length>8)return false;return true;}
 function autoTranslateAndRender(){var targetLang=lang==='ko'?'ko':'en';if(data.tasks.length===0){render();return;}translateTasks(data.tasks,targetLang,function(translatedTasks){data.tasks=translatedTasks;render();});}
@@ -272,35 +299,62 @@ function loadData(){
   var rn=document.getElementById('readonly-notice');
   if(!canEdit){rn.style.display='block';document.getElementById('readonly-text').textContent=T('readonly');document.getElementById('save-btn').disabled=true;}
   else{rn.style.display='none';document.getElementById('save-btn').disabled=false;}
-  var url=APPS_SCRIPT_URL+'?action=read&date='+currentDate+'&_='+Date.now();
+  var url=APPS_SCRIPT_URL+'?action=readAll&_='+Date.now();
   fetch(url).then(function(r){return r.json();}).then(function(res){
     if(res.status==='ok'){
-      if(res.record){
-        data.checkin=isValidTime(res.record.checkin)?res.record.checkin:'';
-        data.checkout=isValidTime(res.record.checkout)?res.record.checkout:'';
-        data.tasks=res.record.tasks||[];
-        data.expenses=res.record.expenses||[];
-        data.note=res.record.note||'';
-        data.notes=res.record.notes||[];
-        data.schedules=res.record.schedules||[];
+      allRows=res.rows||[];
+      var todayRow=null;
+      for(var i=0;i<allRows.length;i++){if(allRows[i].date===currentDate){todayRow=allRows[i];break;}}
+      if(todayRow){
+        data.checkin=isValidTime(todayRow.checkin)?todayRow.checkin:'';
+        data.checkout=isValidTime(todayRow.checkout)?todayRow.checkout:'';
+        data.tasks=todayRow.tasks||[];
+        data.expenses=todayRow.expenses||[];
+        data.note=todayRow.note||'';
+        data.notes=todayRow.notes||[];
+        data.schedules=todayRow.schedules||[];
         setSyncStatus('ok');autoTranslateAndRender();
       } else {
-        data={checkin:'',checkout:'',tasks:[],expenses:[],note:'',notes:res.allNotes||[],schedules:res.allSchedules||[]};
+        data={checkin:'',checkout:'',tasks:[],expenses:[],note:'',notes:res.allNotes||[],schedules:[]};
+        for(var j=allRows.length-1;j>=0;j--){if(allRows[j].schedules&&allRows[j].schedules.length>0){data.schedules=allRows[j].schedules;break;}}
         findAndCarryOver(1,res.allNotes||[]);
       }
     }else{setSyncStatus('error');}
   }).catch(function(){setSyncStatus('error');data={checkin:'',checkout:'',tasks:[],expenses:[],note:'',notes:[],schedules:[]};render();});
 }
-function findAndCarryOver(daysAgo,allNotes){if(daysAgo>=30){data.notes=allNotes;setSyncStatus('ok');render();return;}var targetDate=getDateStrOffset(-daysAgo);var url=APPS_SCRIPT_URL+'?action=read&date='+targetDate+'&_='+Date.now();fetch(url).then(function(r){return r.json();}).then(function(res){if(res.status==='ok'&&res.record){var carried=(res.record.tasks||[]).filter(function(t){return !t.done;}).map(function(t){return Object.assign({},t,{carried:true});});if(carried.length>0){data.tasks=carried;data.notes=allNotes;setSyncStatus('ok');autoTranslateAndRender();}else{findAndCarryOver(daysAgo+1,allNotes);}}else{findAndCarryOver(daysAgo+1,allNotes);}}).catch(function(){data.notes=allNotes;setSyncStatus('ok');render();});}
+function calcExpenseSummary(){
+  var today=getTodayStr();
+  var weekStart=getThisWeekMonday();
+  var monthStart=getThisMonthStart();
+  var todaySum=0,weekSum=0,monthSum=0;
+  var monthCats={traffic:0,office:0,food:0,other:0};
+  var monthDetails={traffic:[],office:[],food:[],other:[]};
+  for(var i=0;i<allRows.length;i++){
+    var row=allRows[i];var d=row.date;var exps=row.expenses||[];
+    exps.forEach(function(e){
+      if(d===today)todaySum+=e.amount;
+      if(d>=weekStart&&d<=today)weekSum+=e.amount;
+      if(d>=monthStart&&d<=today){monthSum+=e.amount;monthCats[e.cat]=(monthCats[e.cat]||0)+e.amount;monthDetails[e.cat].push({name:e.name,amount:e.amount});}
+    });
+  }
+  return{today:todaySum,week:weekSum,month:monthSum,cats:monthCats,details:monthDetails};
+}
 function saveAll(){
   if(!isToday)return;
   var noteEl=document.getElementById('note-input');data.note=noteEl?noteEl.value:'';
   setSyncStatus('saving');
   var params='?action=write&date='+encodeURIComponent(currentDate)+'&checkin='+encodeURIComponent(data.checkin||'')+'&checkout='+encodeURIComponent(data.checkout||'')+'&tasks='+encodeURIComponent(JSON.stringify(data.tasks||[]))+'&expenses='+encodeURIComponent(JSON.stringify(data.expenses||[]))+'&note='+encodeURIComponent(data.note||'')+'&notes='+encodeURIComponent(JSON.stringify(data.notes||[]))+'&schedules='+encodeURIComponent(JSON.stringify(data.schedules||[]))+'&_='+Date.now();
-  fetch(APPS_SCRIPT_URL+params).then(function(r){return r.json();}).then(function(res){if(res.status==='ok'){setSyncStatus('ok');}else{setSyncStatus('error');}}).catch(function(){setSyncStatus('error');});
+  fetch(APPS_SCRIPT_URL+params).then(function(r){return r.json();}).then(function(res){
+    if(res.status==='ok'){
+      var found=false;
+      for(var i=0;i<allRows.length;i++){if(allRows[i].date===currentDate){allRows[i]=Object.assign({},allRows[i],{expenses:data.expenses});found=true;break;}}
+      if(!found)allRows.push({date:currentDate,expenses:data.expenses});
+      setSyncStatus('ok');renderExpenseSummary();
+    }else{setSyncStatus('error');}
+  }).catch(function(){setSyncStatus('error');});
 }
-function recordCheckin(){if(data.checkin||!isToday)return;var now=new Date();data.checkin=String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');renderAttendance();saveAll();}
-function recordCheckout(){if(data.checkout||!isToday)return;var now=new Date();data.checkout=String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');renderAttendance();saveAll();}
+function recordCheckin(){if(data.checkin||!isToday)return;var now=new Date();var utc=now.getTime()+(now.getTimezoneOffset()*60000);var dubai=new Date(utc+(4*3600000));data.checkin=String(dubai.getHours()).padStart(2,'0')+':'+String(dubai.getMinutes()).padStart(2,'0');renderAttendance();saveAll();}
+function recordCheckout(){if(data.checkout||!isToday)return;var now=new Date();var utc=now.getTime()+(now.getTimezoneOffset()*60000);var dubai=new Date(utc+(4*3600000));data.checkout=String(dubai.getHours()).padStart(2,'0')+':'+String(dubai.getMinutes()).padStart(2,'0');renderAttendance();saveAll();}
 function renderAttendance(){
   var ci=document.getElementById('checkin-display');var co=document.getElementById('checkout-display');var bi=document.getElementById('btn-checkin');var bo=document.getElementById('btn-checkout');
   var canEdit=isToday;
@@ -309,42 +363,9 @@ function renderAttendance(){
   if(isValidTime(data.checkout)){co.textContent=data.checkout;co.className='att-time';bo.innerHTML='<span id="l-btn-checkout">'+T('already_out')+'</span>';bo.className='att-btn done';bo.disabled=true;}
   else{co.textContent='—';co.className='att-time empty';bo.innerHTML='<span id="l-btn-checkout">'+T('btn_out')+'</span>';bo.className='att-btn checkout';bo.disabled=!canEdit;}
 }
-function addSchedule(){
-  var y=document.getElementById('sched-year-input').value;
-  var m=document.getElementById('sched-month-input').value;
-  var d=document.getElementById('sched-day-input').value;
-  var dateVal=y&&m&&d?y+'-'+m+'-'+d:'';
-  var cat=document.getElementById('sched-cat-input').value;
-  var title=document.getElementById('sched-title-input').value.trim();
-  var sub=document.getElementById('sched-sub-input').value.trim();
-  if(!dateVal||!title)return;
-  if(!data.schedules)data.schedules=[];
-  data.schedules.push({id:Date.now(),date:dateVal,cat:cat,title:title,sub:sub});
-  data.schedules.sort(function(a,b){return a.date.localeCompare(b.date);});
-  document.getElementById('sched-title-input').value='';
-  document.getElementById('sched-sub-input').value='';
-  renderSchedules();
-  saveAll();
-}
-function deleteSchedule(id){
-  data.schedules=(data.schedules||[]).filter(function(s){return s.id!==id;});
-  renderSchedules();
-  saveAll();
-}
-function translateSchedules(schedules,targetLang,callback){
-  if(schedules.length===0){callback([]);return;}
-  var translated=schedules.slice();
-  var pending=schedules.length;
-  schedules.forEach(function(s,i){
-    var textToTranslate=s.title+(s.sub?'\n'+s.sub:'');
-    translateText(textToTranslate,targetLang,function(result){
-      var lines=result.split('\n');
-      translated[i]=Object.assign({},s,{displayTitle:lines[0]||s.title,displaySub:lines[1]||s.sub||''});
-      pending--;
-      if(pending===0)callback(translated);
-    });
-  });
-}
+function addSchedule(){var y=document.getElementById('sched-year-input').value;var m=document.getElementById('sched-month-input').value;var d=document.getElementById('sched-day-input').value;var dateVal=y&&m&&d?y+'-'+m+'-'+d:'';var cat=document.getElementById('sched-cat-input').value;var title=document.getElementById('sched-title-input').value.trim();var sub=document.getElementById('sched-sub-input').value.trim();if(!dateVal||!title)return;if(!data.schedules)data.schedules=[];data.schedules.push({id:Date.now(),date:dateVal,cat:cat,title:title,sub:sub});data.schedules.sort(function(a,b){return a.date.localeCompare(b.date);});document.getElementById('sched-title-input').value='';document.getElementById('sched-sub-input').value='';renderSchedules();saveAll();}
+function deleteSchedule(id){data.schedules=(data.schedules||[]).filter(function(s){return s.id!==id;});renderSchedules();saveAll();}
+function translateSchedules(schedules,targetLang,callback){if(schedules.length===0){callback([]);return;}var translated=schedules.slice();var pending=schedules.length;schedules.forEach(function(s,i){var textToTranslate=s.title+(s.sub?'\n'+s.sub:'');translateText(textToTranslate,targetLang,function(result){var lines=result.split('\n');translated[i]=Object.assign({},s,{displayTitle:lines[0]||s.title,displaySub:lines[1]||s.sub||''});pending--;if(pending===0)callback(translated);});});}
 function renderSchedules(){
   var list=document.getElementById('sched-list');
   var today=getTodayStr();
@@ -357,15 +378,14 @@ function renderSchedules(){
     list.innerHTML=translated.map(function(s){
       var d=new Date(s.date+'T00:00:00');
       var months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-      var day=d.getDate();
-      var mon=months[d.getMonth()];
+      var day=d.getDate();var mon=months[d.getMonth()];
       var isUrgent=s.date>today&&s.date<=getDateStrOffset(7);
       var dayColor=isUrgent?'var(--danger)':'var(--text)';
       var monColor=isUrgent?'var(--danger)':'var(--text-sub)';
       var catLabel=T('sched_cat')[s.cat]||s.cat;
       var displayTitle=s.displayTitle||s.title;
       var displaySub=s.displaySub||s.sub||'';
-      return '<div class="sched-item">'
+      return'<div class="sched-item">'
         +'<div class="sched-date"><div class="sched-day" style="color:'+dayColor+'">'+day+'</div><div class="sched-mon" style="color:'+monColor+'">'+mon+'</div></div>'
         +'<div class="sched-content"><p class="sched-title">'+escHtml(displayTitle)+'</p>'+(displaySub?'<p class="sched-sub">'+escHtml(displaySub)+'</p>':'')+'</div>'
         +'<span class="sched-badge '+s.cat+'">'+catLabel+'</span>'
@@ -397,10 +417,40 @@ function renderTasks(){
       +'</div>';
   }).join('');
 }
-function addExpense(){if(!isToday)return;var cat=document.getElementById('exp-cat').value;var name=document.getElementById('exp-name').value.trim();var amt=parseFloat(document.getElementById('exp-amount').value);if(!name||isNaN(amt)||amt<=0)return;data.expenses.push({cat:cat,name:name,amount:amt});document.getElementById('exp-name').value='';document.getElementById('exp-amount').value='';renderExpenses();renderDonut();saveAll();}
+function addExpense(){if(!isToday)return;var cat=document.getElementById('exp-cat').value;var name=document.getElementById('exp-name').value.trim();var amt=parseFloat(document.getElementById('exp-amount').value);if(!name||isNaN(amt)||amt<=0)return;data.expenses.push({cat:cat,name:name,amount:amt});document.getElementById('exp-name').value='';document.getElementById('exp-amount').value='';renderExpenses();saveAll();}
 function deleteExpense(i){if(!isToday)return;data.expenses.splice(i,1);renderExpenses();saveAll();}
 function renderExpenses(){var list=document.getElementById('exp-list');var total=document.getElementById('exp-total');var canEdit=isToday;if(data.expenses.length===0){list.innerHTML='<div class="no-exp">'+T('no_exp')+'</div>';total.style.display='none';return;}var sum=0;list.innerHTML=data.expenses.map(function(e,i){sum+=e.amount;return'<div class="exp-row"><span class="exp-cat">'+(T('cat')[e.cat]||e.cat)+'</span><span class="exp-name">'+escHtml(e.name)+'</span><span class="exp-amount">AED '+e.amount.toFixed(2)+'</span>'+(canEdit?'<button class="exp-del" onclick="deleteExpense('+i+')" title="Delete">×</button>':'')+'</div>';}).join('');total.style.display='flex';total.textContent=T('total')+': AED '+sum.toFixed(2);}
-function render(){renderAttendance();renderTasks();renderExpenses();renderNotes();renderSchedules();applyLang();renderDonut();}
+function renderExpenseSummary(){var summary=calcExpenseSummary();document.getElementById('exp-today-val').textContent=summary.today.toFixed(0);document.getElementById('exp-week-val').textContent=summary.week.toFixed(0);document.getElementById('exp-month-val').textContent=summary.month.toFixed(0);renderDonut(summary);}
+function toggleCatDetail(cat){var detail=document.getElementById('cat-detail-'+cat);var chevron=document.getElementById('cat-chevron-'+cat);if(!detail)return;var isOpen=detail.classList.contains('open');detail.classList.toggle('open',!isOpen);if(chevron)chevron.classList.toggle('open',!isOpen);}
+function renderDonut(summary){
+  var colors={traffic:'#f59e0b',office:'#3b82f6',food:'#ec4899',other:'#8b5cf6'};
+  var svg=document.getElementById('donut-svg');var legend=document.getElementById('donut-legend');var dtotal=document.getElementById('donut-total');var dlabel=document.getElementById('donut-label');
+  if(!svg||!legend)return;
+  var oldArcs=svg.querySelectorAll('.arc');oldArcs.forEach(function(a){a.remove();});
+  var total=summary?summary.month:0;var cats=summary?summary.cats:{traffic:0,office:0,food:0,other:0};var details=summary?summary.details:{traffic:[],office:[],food:[],other:[]};
+  dtotal.textContent=total>0?Math.round(total):'0';
+  dlabel.textContent=lang==='ko'?'이번달':'Month';
+  var r=45,cx=60,cy=60,circ=2*Math.PI*r;var offset=0;var legendHtml='';
+  if(total===0){legend.innerHTML='<div style="font-size:11px;color:var(--text-dim);text-align:center;">'+T('no_exp')+'</div>';return;}
+  Object.keys(cats).forEach(function(cat){
+    var val=cats[cat];if(val<=0)return;
+    var pct=val/total;var dash=pct*circ;
+    var circle=document.createElementNS('http://www.w3.org/2000/svg','circle');
+    circle.setAttribute('class','arc');circle.setAttribute('cx',cx);circle.setAttribute('cy',cy);circle.setAttribute('r',r);
+    circle.setAttribute('fill','none');circle.setAttribute('stroke',colors[cat]);circle.setAttribute('stroke-width','18');
+    circle.setAttribute('stroke-dasharray',dash+' '+(circ-dash));
+    circle.setAttribute('stroke-dashoffset',String(-(offset*circ)));
+    circle.setAttribute('transform','rotate(-90 60 60)');
+    svg.insertBefore(circle,svg.querySelector('text'));
+    offset+=pct;
+    var catName=T('cat')[cat]||cat;
+    var detailItems=(details[cat]||[]).map(function(d){return'<div class="exp-detail-item"><span>'+escHtml(d.name)+'</span><span>AED '+d.amount.toFixed(2)+'</span></div>';}).join('');
+    legendHtml+='<div class="exp-cat-row" onclick="toggleCatDetail(\''+cat+'\')"><span class="exp-cat-dot" style="background:'+colors[cat]+';"></span><span class="exp-cat-name">'+catName+'</span><span class="exp-cat-amt">AED '+val.toFixed(0)+'</span><span class="exp-cat-chevron" id="cat-chevron-'+cat+'">›</span></div><div class="exp-cat-detail" id="cat-detail-'+cat+'">'+detailItems+'</div>';
+  });
+  legend.innerHTML=legendHtml;
+}
+function findAndCarryOver(daysAgo,allNotes){if(daysAgo>=30){data.notes=allNotes;setSyncStatus('ok');render();return;}var targetDate=getDateStrOffset(-daysAgo);var found=false;for(var i=0;i<allRows.length;i++){if(allRows[i].date===targetDate){var carried=(allRows[i].tasks||[]).filter(function(t){return !t.done;}).map(function(t){return Object.assign({},t,{carried:true});});if(carried.length>0){data.tasks=carried;data.notes=allNotes;setSyncStatus('ok');autoTranslateAndRender();found=true;}break;}}if(!found)findAndCarryOver(daysAgo+1,allNotes);}
+function render(){renderAttendance();renderTasks();renderExpenses();renderExpenseSummary();renderNotes();renderSchedules();applyLang();}
 function applyLang(){
   document.getElementById('h-title').textContent=T('title');
   document.getElementById('l-att').textContent=T('att');
@@ -413,6 +463,9 @@ function applyLang(){
   document.getElementById('l-expense').textContent=T('expense');
   document.getElementById('l-exp-add').textContent=T('add');
   document.getElementById('exp-name').placeholder=T('item');
+  document.getElementById('l-exp-today').textContent=T('exp_today');
+  document.getElementById('l-exp-week').textContent=T('exp_week');
+  document.getElementById('l-exp-month').textContent=T('exp_month');
   document.getElementById('l-note').textContent=T('note');
   var lna=document.getElementById('l-note-add');if(lna)lna.textContent=T('note_add');
   var ni=document.getElementById('note-input');if(ni)ni.placeholder=T('note_ph');
@@ -432,59 +485,30 @@ function applyLang(){
   document.getElementById('sched-sub-input').placeholder=lang==='ko'?'상세 내용 (선택)':'Details (optional)';
   var bar=document.getElementById('sync-bar');if(!bar.classList.contains('error')&&!bar.classList.contains('saving')){document.getElementById('sync-msg').textContent=T('sync_ok');}
   if(document.getElementById('readonly-notice').style.display!=='none'){document.getElementById('readonly-text').textContent=T('readonly');}
-  updateTabLabels();renderDonut();renderAttendance();renderTasks();renderExpenses();renderSchedules();
+  renderAttendance();renderTasks();renderExpenses();renderExpenseSummary();renderSchedules();
 }
 function setLang(l){lang=l;document.querySelectorAll('.lang-btn').forEach(function(b){b.classList.toggle('active',b.textContent===(l==='en'?'EN':'한국어'));});var targetLang=l==='ko'?'ko':'en';translateTasks(data.tasks,targetLang,function(translatedTasks){data.tasks=translatedTasks;applyLang();});renderNotes();initSchedDropdowns();}
-var chartTab='today';
-function setChartTab(tab,btn){chartTab=tab;document.querySelectorAll('.chart-tab').forEach(function(b){b.classList.remove('active');});btn.classList.add('active');updateTabLabels();renderDonut();}
-function updateTabLabels(){var t=[T('tab_today'),T('tab_week'),T('tab_month')];var td=document.getElementById('tab-today');var tw=document.getElementById('tab-week');var tm=document.getElementById('tab-month');if(td)td.textContent=t[0];if(tw)tw.textContent=t[1];if(tm)tm.textContent=t[2];}
-function renderDonut(){var expenses=data.expenses||[];var cats={traffic:0,office:0,food:0,other:0};expenses.forEach(function(e){cats[e.cat]=(cats[e.cat]||0)+e.amount;});var total=Object.values(cats).reduce(function(a,b){return a+b;},0);var colors={traffic:'#f59e0b',office:'#3b82f6',food:'#ec4899',other:'#8b5cf6'};var svg=document.getElementById('donut-svg');var legend=document.getElementById('donut-legend');var dtotal=document.getElementById('donut-total');var dlabel=document.getElementById('donut-label');if(!svg||!legend)return;var oldArcs=svg.querySelectorAll('.arc');oldArcs.forEach(function(a){a.remove();});dtotal.textContent=total>0?Math.round(total):'0';dlabel.textContent=T('total');var r=45,cx=60,cy=60,circ=2*Math.PI*r;var offset=0;var legendHtml='';if(total===0){legend.innerHTML='<div style="font-size:11px;color:var(--text-dim);text-align:center;">'+T('no_exp')+'</div>';return;}Object.keys(cats).forEach(function(cat){var val=cats[cat];if(val<=0)return;var pct=val/total;var dash=pct*circ;var circle=document.createElementNS('http://www.w3.org/2000/svg','circle');circle.setAttribute('class','arc');circle.setAttribute('cx',cx);circle.setAttribute('cy',cy);circle.setAttribute('r',r);circle.setAttribute('fill','none');circle.setAttribute('stroke',colors[cat]);circle.setAttribute('stroke-width','18');circle.setAttribute('stroke-dasharray',dash+' '+(circ-dash));circle.setAttribute('stroke-dashoffset',String(-(offset*circ)));circle.setAttribute('transform','rotate(-90 60 60)');svg.insertBefore(circle,svg.querySelector('text'));offset+=pct;var catName=T('cat')[cat]||cat;legendHtml+='<div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-sub);"><span style="width:7px;height:7px;border-radius:50%;background:'+colors[cat]+';flex-shrink:0;"></span>'+catName+' '+Math.round(pct*100)+'%</div>';});legend.innerHTML=legendHtml;}
 function addNote(){var inp=document.getElementById('note-input');var txt=inp?inp.value.trim():'';if(!txt)return;if(!data.notes)data.notes=[];data.notes.unshift({text:txt,date:currentDate,id:Date.now()});inp.value='';renderNotes();saveAll();}
 function deleteNote(id){data.notes=(data.notes||[]).filter(function(n){return n.id!==id;});renderNotes();saveAll();}
 function renderNotes(){var list=document.getElementById('note-list');if(!list)return;var notes=data.notes||[];if(notes.length===0){list.innerHTML='<div style="font-size:14px;color:var(--text-dim);text-align:center;padding:16px 0;">'+T('no_notes')+'</div>';return;}var targetLang=lang==='ko'?'ko':'en';var pending=notes.length;var translated=notes.slice();notes.forEach(function(n,i){translateText(n.text,targetLang,function(result){translated[i]=Object.assign({},n,{displayText:result});pending--;if(pending===0){list.innerHTML=translated.map(function(n,idx){return'<div class="note-item"><span class="note-item-num">'+(idx+1)+'.</span><span class="note-item-text">'+escHtml(n.displayText||n.text)+'</span><span class="note-item-date">'+(n.date||'')+'</span>'+(isToday?'<button class="note-del-btn" onclick="deleteNote('+n.id+')" title="'+T('note_del')+'">×</button>':'')+'</div>';}).join('');}});});}
 function escHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function initSchedDropdowns(){
   var now=new Date();
-  var yEl=document.getElementById('sched-year-input');
-  var mEl=document.getElementById('sched-month-input');
-  var dEl=document.getElementById('sched-day-input');
+  var yEl=document.getElementById('sched-year-input');var mEl=document.getElementById('sched-month-input');var dEl=document.getElementById('sched-day-input');
   if(!yEl||!mEl||!dEl)return;
   var prevY=yEl.value;var prevM=mEl.value;
   yEl.innerHTML='<option value="">'+T('sched_year')+'</option>';
-  for(var y=now.getFullYear();y<=now.getFullYear()+2;y++){
-    var o=document.createElement('option');o.value=y;o.textContent=y+(lang==='ko'?'년':'');
-    if(prevY?y===parseInt(prevY):y===now.getFullYear())o.selected=true;
-    yEl.appendChild(o);
-  }
+  for(var y=now.getFullYear();y<=now.getFullYear()+2;y++){var o=document.createElement('option');o.value=y;o.textContent=y+(lang==='ko'?'년':'');if(prevY?y===parseInt(prevY):y===now.getFullYear())o.selected=true;yEl.appendChild(o);}
   mEl.innerHTML='<option value="">'+T('sched_month')+'</option>';
   var months=T('sched_months');
-  months.forEach(function(mn,i){
-    var o=document.createElement('option');
-    o.value=String(i+1).padStart(2,'0');
-    o.textContent=mn;
-    if(prevM?String(i+1).padStart(2,'0')===prevM:i===now.getMonth())o.selected=true;
-    mEl.appendChild(o);
-  });
-  mEl.addEventListener('change',updateDays);
-  yEl.addEventListener('change',updateDays);
-  updateDays();
+  months.forEach(function(mn,i){var o=document.createElement('option');o.value=String(i+1).padStart(2,'0');o.textContent=mn;if(prevM?String(i+1).padStart(2,'0')===prevM:i===now.getMonth())o.selected=true;mEl.appendChild(o);});
+  mEl.addEventListener('change',updateDays);yEl.addEventListener('change',updateDays);updateDays();
 }
 function updateDays(){
-  var yEl=document.getElementById('sched-year-input');
-  var mEl=document.getElementById('sched-month-input');
-  var dEl=document.getElementById('sched-day-input');
-  var prev=dEl.value;
-  var y=parseInt(yEl.value)||new Date().getFullYear();
-  var m=parseInt(mEl.value)||1;
-  var days=new Date(y,m,0).getDate();
+  var yEl=document.getElementById('sched-year-input');var mEl=document.getElementById('sched-month-input');var dEl=document.getElementById('sched-day-input');
+  var prev=dEl.value;var y=parseInt(yEl.value)||new Date().getFullYear();var m=parseInt(mEl.value)||1;var days=new Date(y,m,0).getDate();
   dEl.innerHTML='<option value="">'+T('sched_day')+'</option>';
-  for(var i=1;i<=days;i++){
-    var o=document.createElement('option');
-    o.value=String(i).padStart(2,'0');
-    o.textContent=lang==='ko'?i+'일':i;
-    if(String(i).padStart(2,'0')===prev)o.selected=true;
-    dEl.appendChild(o);
-  }
+  for(var i=1;i<=days;i++){var o=document.createElement('option');o.value=String(i).padStart(2,'0');o.textContent=lang==='ko'?i+'일':i;if(String(i).padStart(2,'0')===prev)o.selected=true;dEl.appendChild(o);}
 }
 applyLang();
 loadData();
