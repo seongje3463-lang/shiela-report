@@ -315,9 +315,10 @@ function loadData(){
         data.schedules=todayRow.schedules||[];
         setSyncStatus('ok');autoTranslateAndRender();
       } else {
-        data={checkin:'',checkout:'',tasks:[],expenses:[],note:'',notes:res.allNotes||[],schedules:[]};
+        var pastNotes=(res.allNotes||[]).map(function(n){return Object.assign({},n,{historical:true});});
+        data={checkin:'',checkout:'',tasks:[],expenses:[],note:'',notes:pastNotes,schedules:[]};
         for(var j=allRows.length-1;j>=0;j--){if(allRows[j].schedules&&allRows[j].schedules.length>0){data.schedules=allRows[j].schedules;break;}}
-        findAndCarryOver(1,res.allNotes||[]);
+        findAndCarryOver(1,pastNotes);
       }
     }else{setSyncStatus('error');}
   }).catch(function(){setSyncStatus('error');data={checkin:'',checkout:'',tasks:[],expenses:[],note:'',notes:[],schedules:[]};render();});
@@ -343,8 +344,19 @@ function saveAll(){
   if(!isToday)return;
   var noteEl=document.getElementById('note-input');data.note=noteEl?noteEl.value:'';
   setSyncStatus('saving');
-  var params='?action=write&date='+encodeURIComponent(currentDate)+'&checkin='+encodeURIComponent(data.checkin||'')+'&checkout='+encodeURIComponent(data.checkout||'')+'&tasks='+encodeURIComponent(JSON.stringify(data.tasks||[]))+'&expenses='+encodeURIComponent(JSON.stringify(data.expenses||[]))+'&note='+encodeURIComponent(data.note||'')+'&notes='+encodeURIComponent(JSON.stringify(data.notes||[]))+'&schedules='+encodeURIComponent(JSON.stringify(data.schedules||[]))+'&_='+Date.now();
-  fetch(APPS_SCRIPT_URL+params).then(function(r){return r.json();}).then(function(res){
+  var notesToSave=(data.notes||[]).filter(function(n){return !n.historical;});
+  var body={
+    action:'write',
+    date:currentDate,
+    checkin:data.checkin||'',
+    checkout:data.checkout||'',
+    tasks:JSON.stringify(data.tasks||[]),
+    expenses:JSON.stringify(data.expenses||[]),
+    note:data.note||'',
+    notes:JSON.stringify(notesToSave),
+    schedules:JSON.stringify(data.schedules||[])
+  };
+  fetch(APPS_SCRIPT_URL,{method:'POST',body:JSON.stringify(body)}).then(function(r){return r.json();}).then(function(res){
     if(res.status==='ok'){
       var found=false;
       for(var i=0;i<allRows.length;i++){if(allRows[i].date===currentDate){allRows[i]=Object.assign({},allRows[i],{expenses:data.expenses});found=true;break;}}
